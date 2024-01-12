@@ -1,0 +1,15 @@
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/ann/Column.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/package-info.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/ann/DefWhere.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/util/CamelUnderUtil.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/entity/ComBean.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/entity/Activity.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/mapper/BaseMapper.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/constant/Constant.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/ann/TableId.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/ann/IgnoreColumn.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/entity/Page.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/ann/Table.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/ann/OrderBy.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/ann/YiliTableProcessor.java
+/Users/zhangcan/Documents/projects/yili-mybatis-plus/src/main/java/cn/yili/mybatis/entity/BaseEntity.java

@@ -8,10 +8,7 @@ import cn.yili.mybatis.util.CamelUnderUtil;
 import com.google.auto.service.AutoService;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTrees;
-import com.sun.tools.javac.code.Attribute;
-import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.TypeTag;
+import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
@@ -117,6 +114,31 @@ public class YiliTableProcessor extends AbstractProcessor {
             messager.printMessage(Diagnostic.Kind.NOTE, "失败：" + set);
         }
         return true;
+    }
+
+    /**
+     * 创建 域/方法 的多级访问, 方法的标识只能是最后一个
+     *
+     * @param components
+     * @return
+     */
+    private JCTree.JCExpression memberAccess(String components) {
+        String[] componentArray = components.split("\\.");
+        JCTree.JCExpression expr = treeMaker.Ident(getNameFromString(componentArray[0]));
+        for (int i = 1; i < componentArray.length; i++) {
+            expr = treeMaker.Select(expr, getNameFromString(componentArray[i]));
+        }
+        return expr;
+    }
+
+    /**
+     * 根据字符串获取Name，（利用Names的fromString静态方法）
+     *
+     * @param s
+     * @return
+     */
+    private com.sun.tools.javac.util.Name getNameFromString(String s) {
+        return names.fromString(s);
     }
 
     /**
@@ -456,7 +478,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                 } else {
                     updateSetStatement.append(treeMaker.If(
                             treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(name, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
-                            treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  `" + columnName + "` = #{" + PARAM_OBJECT + name + "} " + (jj+1<comBeans.size() && !comBeans.get(comBeans.size()-1).isTableId()? ", ": "")))),
+                            treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  `" + columnName + "` = #{" + PARAM_OBJECT + name + "} " +  ","))),
                             null));
                 }
                 if (comBean.isDefWhere()) {
@@ -537,6 +559,9 @@ public class YiliTableProcessor extends AbstractProcessor {
         selectWhereStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
         results.add(buildMethod("baseGenSelectWhere", selectWhereStatement));
 
+        updateSetStatement.append(treeMaker.Exec(treeMaker.Assign(treeMaker.Ident(names.fromString("result")),
+                treeMaker.Apply(List.of(memberAccess("java.lang.Integer"), memberAccess("java.lang.Integer")), treeMaker.Select(treeMaker.Ident(names.fromString("result")), names.fromString("substring")),
+                        List.of(treeMaker.Literal(1), treeMaker.Binary(JCTree.Tag.MINUS, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("result")), names.fromString("length")), List.nil()), treeMaker.Literal(1)))))));
         updateSetStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
         results.add(buildMethod("baseGenUpdateSet", updateSetStatement));
 

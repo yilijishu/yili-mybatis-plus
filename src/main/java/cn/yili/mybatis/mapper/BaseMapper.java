@@ -154,6 +154,7 @@ public interface BaseMapper<T> {
             Object obj = map.get("p");
             StringBuffer sbf = new StringBuffer();
             sbf.append("update ");
+            sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
             sbf.append(" set ");
             sbf.append(obj.getClass().getMethod("baseGenUpdateSet").invoke(obj));
             sbf.append(obj.getClass().getMethod("baseGenDefWhere").invoke(obj));

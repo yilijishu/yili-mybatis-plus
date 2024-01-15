@@ -3,19 +3,16 @@ package cn.yili.mybatis.ann;
 
 import cn.yili.mybatis.constant.Constant;
 import cn.yili.mybatis.entity.ComBean;
+import cn.yili.mybatis.iter.BaseBeanInterface;
 import cn.yili.mybatis.util.CamelUnderUtil;
 import com.google.auto.service.AutoService;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTrees;
-import com.sun.tools.javac.code.Attribute;
-import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
-import com.sun.tools.javac.util.List;
-import com.sun.tools.javac.util.ListBuffer;
-import com.sun.tools.javac.util.Names;
-import com.sun.tools.javac.util.Pair;
+import com.sun.tools.javac.util.*;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,6 +20,7 @@ import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
 import javax.tools.Diagnostic;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -34,6 +32,7 @@ import java.util.Set;
 @AutoService(Processor.class)
 public class YiliTableProcessor extends AbstractProcessor {
 
+    private static final String PARAM_OBJECT = "p.";
     private Messager messager;
     private com.sun.tools.javac.api.JavacTrees trees;
     private com.sun.tools.javac.tree.TreeMaker treeMaker;
@@ -98,6 +97,8 @@ public class YiliTableProcessor extends AbstractProcessor {
                                     jcClassDecl.defs = jcClassDecl.defs.append(printMethod);
                                 }
                             }
+//
+//                            jcClassDecl.implementing = jcClassDecl.implementing.append(treeMaker.Ident(names.fromString("cn.yili.mybatis.iter.BaseBeanInterface")));
                             super.visitClassDef(jcClassDecl);
                         }
                     });
@@ -221,15 +222,18 @@ public class YiliTableProcessor extends AbstractProcessor {
         messager.printMessage(Diagnostic.Kind.NOTE, "执行buildMethods" + comBeans);
         java.util.List<JCTree.JCMethodDecl> results = new ArrayList<>();
         StringBuffer columns = new StringBuffer();
-        StringBuffer names = new StringBuffer();
+        StringBuffer names2 = new StringBuffer();
         StringBuffer orderBy = new StringBuffer();
         StringBuffer defWhere = new StringBuffer();
         StringBuffer tableStr = new StringBuffer();
-        StringBuffer selectWhere = new StringBuffer();
-        StringBuffer updateSet = new StringBuffer();
         StringBuffer updateWhere = new StringBuffer();
         java.util.List<ComBean> orderByList = new ArrayList<>();
         java.util.List<ComBean> defWhereList = new ArrayList<>();
+        ListBuffer<JCTree.JCStatement> selectWhereStatement = new ListBuffer<>();
+        ListBuffer<JCTree.JCStatement> updateSetStatement = new ListBuffer<>();
+        selectWhereStatement.append(treeMaker.VarDef(treeMaker.Modifiers(Flags.PARAMETER), names.fromString("result"), treeMaker.Ident(names.fromString("String")), treeMaker.Literal("")));
+        updateSetStatement.append(treeMaker.VarDef(treeMaker.Modifiers(Flags.PARAMETER), names.fromString("result"), treeMaker.Ident(names.fromString("String")), treeMaker.Literal("")));
+
         if (table.value() != null && !"".equals(table.value())) {
             tableStr.append(" ");
             tableStr.append(table.value());
@@ -257,19 +261,24 @@ public class YiliTableProcessor extends AbstractProcessor {
                 columns.append("`");
                 columns.append(columnName);
                 columns.append("`");
-                names.append(",#{");
-                names.append(name);
-                names.append("}");
+                names2.append(",#{");
+                names2.append(PARAM_OBJECT);
+                names2.append(name);
+                names2.append("}");
 
                 if (comBean.isTableId()) {
-                    updateWhere.append(" and `" + columnName + "` = #{" + name + "}");
+                    updateWhere.append(" and `" + columnName + "` = #{" + PARAM_OBJECT + name + "}");
                 } else {
-                    updateSet.append(Constant.IFNULL_TEMPLATE.replace("{CONDITION}", name + " != null").replace("{WHERE}", "  `" + columnName + "` = #{" + name + "} " + ", "));
+                    updateSetStatement.append(treeMaker.If(
+                            treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(name, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
+                            treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  `" + columnName + "` = #{" + PARAM_OBJECT + name + "} " + ", "))), null));
                 }
                 if (comBean.isDefWhere()) {
                     defWhereList.add(comBean);
                 } else {
-                    selectWhere.append(Constant.IFNULL_TEMPLATE.replace("{CONDITION}", name + " != null").replace("{WHERE}", " and `" + columnName + "` = #{" + name + "} "));
+                    selectWhereStatement.append(treeMaker.If(
+                            treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(name, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
+                            treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and `" + columnName + "` = #{" + PARAM_OBJECT + name + "} "))), null));
                 }
                 if (comBean.isOrderBy()) {
                     orderByList.add(comBean);
@@ -313,20 +322,40 @@ public class YiliTableProcessor extends AbstractProcessor {
             updateWhere.delete(0, updateWhere.length());
             updateWhere.append(tmp);
         }
-        results.add(buildMethod("genOrderBy", orderBy.toString()));
-        results.add(buildMethod("genTable", tableStr.toString()));
-        results.add(buildMethod("genColumnNames", columns.toString().substring(1)));
-        results.add(buildMethod("genNames", names.toString().substring(1)));
-        results.add(buildMethod("genUpdateSet", updateSet.toString()));
-        results.add(buildMethod("genUpdateWhere", updateWhere.toString()));
-        results.add(buildMethod("genDefWhere", defWhere.toString()));
-        results.add(buildMethod("genSelectWhere", selectWhere.toString()));
+        results.add(buildMethod("getGenOrderBy", orderBy.toString()));
+        results.add(buildMethod("getGenTable", tableStr.toString()));
+        results.add(buildMethod("getGenColumnNames", columns.toString().substring(1)));
+        results.add(buildMethod("getGenNames", names2.toString().substring(1)));
+        results.add(buildMethod("getGenUpdateWhere", updateWhere.toString()));
+        results.add(buildMethod("getGenDefWhere", defWhere.toString()));
+        messager.printMessage(Diagnostic.Kind.NOTE, "开始生成脚本");
+        selectWhereStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
+        updateSetStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
+        results.add(buildMethod("getGenSelectWhere", selectWhereStatement));
+        results.add(buildMethod("getGenUpdateSet", updateSetStatement));
+        messager.printMessage(Diagnostic.Kind.NOTE, "生成脚本结束");
         return results;
     }
 
+    //insert
+    //insertAll
+    //update
+    //select
+    //
+
+    public JCTree.JCMethodDecl buildMethod(String method, ListBuffer<JCTree.JCStatement> statements) {
+        JCTree.JCBlock body = treeMaker.Block(0, statements.toList());
+        messager.printMessage(Diagnostic.Kind.NOTE, "代码块:"  + body.toString());
+        // 生成columnNames()方法
+        return treeMaker
+                .MethodDef(treeMaker.Modifiers(com.sun.tools.javac.code.Flags.PUBLIC), names.fromString(method),
+                        treeMaker.Ident(names.fromString("String")),
+                        List.nil(), List.nil(), List.nil(), body, null);
+    }
 
     public JCTree.JCMethodDecl buildMethod(String method, String str) {
         ListBuffer<JCTree.JCStatement> statements = new ListBuffer<>();
+
         statements.append(treeMaker.Return(treeMaker.Literal(str)));
 
         JCTree.JCBlock body = treeMaker.Block(0, statements.toList());

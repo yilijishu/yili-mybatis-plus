@@ -1,68 +1,68 @@
 package cn.yili.mybatis.mapper;
 
-import cn.yili.mybatis.entity.BaseEntity;
 import cn.yili.mybatis.entity.Page;
 import org.apache.ibatis.annotations.*;
 
 import java.util.Collection;
 import java.util.List;
+
 @Mapper
-public interface BaseMapper<T extends BaseEntity> {
+public interface BaseMapper<T> {
+
+    String PAGE_BASE = "      <if test=\"page != null\">" +
+            "        limit ${page.start}, ${page.pageSize}" +
+            "      </if>";
+    String PARAM_PAGE = "page";
+    String LIMIT_1 = " limit 1";
+    String PARAM_OBJECT = "p";
 
     //--------------------------------------------------------- 标准产物.
     default void defaultMethod() {
 
     }
 
-    String PAGE_BASE = "      <if test=\"page != null\">" +
-            "        limit #{page.start}, #{page.pageSize}" +
-            "      </if>";
-    String PARAM_PAGE = "page";
-
-    String LIMIT_1 = " limit 1";
-
-    @Insert("insert into #{genTable()} (#{genColumnNames()}) values (#{genNames()})")
+    @Insert("insert into ${p.genTable} (${p.genColumnNames}) values (${p.genNames})")
     @ResultType(Integer.class)
     @Options(useGeneratedKeys = true, keyProperty = "id")
-    Integer insert(T p);
+    Integer insert(@Param(PARAM_OBJECT) T p);
 
 
     @Update("<script>" +
-            "update #{genTable()}" +
+            "update ${p.genTable}" +
             "     <set>" +
-            " #{genUpdateSet()} " +
+            " ${p.genUpdateSet} " +
             "    </set>" +
-            "    #{genDefWhere} #{genUpdateWhere()} " +
+            "    ${p.genDefWhere} ${p.genUpdateWhere} " +
             "</script>")
     @ResultType(Integer.class)
-    Integer update(T p);
+    Integer update(@Param(PARAM_OBJECT) T p);
 
     @Insert("<script>" +
-            "insert into #{genTable()} (#{genColumnNames()})" +
+            "insert into ${p.genTable} (${p.genColumnNames})" +
             "    values " +
-            " <foreach collection=\"list\" separator=\",\">" +
-            "(  #{genNames()}  )" +
+            " <foreach collection=\"list\" item=\"" + PARAM_OBJECT + " \" separator=\",\">" +
+            "(  ${p.genNames}  )" +
             "</foreach></script>")
     @ResultType(Integer.class)
     @Options(useGeneratedKeys = true, keyProperty = "id")
     Integer insertAll(@Param("list") Collection<T> p);
 
     @Select("<script>" +
-            "select #{genColumnNames()} from #{genTable()} #{genDefWhere()} #{genSelectWhere()} #{genOrderBy()}" +
+            "select ${p.genColumnNames} from ${p.genTable} ${p.genDefWhere} ${p.genSelectWhere} ${p.genOrderBy}" +
             PAGE_BASE +
             "</script>")
-    List<T> select(T p, @Param(PARAM_PAGE) Page page);
+    List<T> select(@Param(PARAM_OBJECT) T p, @Param(PARAM_PAGE) Page page);
 
     @Select("<script>" +
-            "select #{genColumnNames()} from #{genTable()} #{genDefWhere()} #{genSelectWhere()} " +
+            "select ${p.genColumnNames} from ${p.genTable} ${p.genDefWhere} ${p.genSelectWhere} " +
             LIMIT_1 +
             "</script>")
-    T get(T p);
+    T get(@Param(PARAM_OBJECT) T p);
 
 
     @Select("<script>" +
-            "select count(1) from #{genTable()} #{genDefWhere()} #{genSelectWhere()}" +
+            "select count(1) from ${p.genTable} ${p.genDefWhere} ${p.genSelectWhere}" +
             "</script>")
     @ResultType(Integer.class)
-    Integer count(T p);
+    Integer count(@Param(PARAM_OBJECT) T p);
 }

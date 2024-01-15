@@ -1,13 +1,11 @@
 cn/yili/mybatis/constant/Constant.class
 cn/yili/mybatis/mapper/BaseMapper.class
 cn/yili/mybatis/ann/Column.class
-cn/yili/mybatis/entity/BaseEntity.class
 cn/yili/mybatis/iter/BaseBeanInterface.class
 cn/yili/mybatis/ann/YiliTableProcessor$1.class
 cn/yili/mybatis/entity/ComBean.class
 cn/yili/mybatis/ann/DefWhere.class
 cn/yili/mybatis/ann/IgnoreColumn.class
-cn/yili/mybatis/entity/Activity.class
 cn/yili/mybatis/ann/OrderBy.class
 cn/yili/mybatis/ann/YiliTableProcessor.class
 cn/yili/mybatis/ann/TableId.class
@@ -16,4 +14,5 @@ cn/yili/mybatis/entity/Page.class
 cn/yili/mybatis/constant/Constant$Oper.class
 cn/yili/mybatis/constant/Constant$OrderByValue.class
 META-INF/services/javax.annotation.processing.Processor
+cn/yili/mybatis/mapper/BaseMapper$BaseSqlProvider.class
 cn/yili/mybatis/ann/Table.class

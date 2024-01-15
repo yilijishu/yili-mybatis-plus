@@ -2,6 +2,8 @@ package cn.yili.mybatis.entity;
 
 import lombok.Data;
 
+import java.lang.reflect.InvocationTargetException;
+
 @Data
 public class ComBean {
     private String name;
@@ -22,5 +24,6 @@ public class ComBean {
     private boolean orderBy;
     private String orderByVal;
     private Integer order;
+
 
 }

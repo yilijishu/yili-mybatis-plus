@@ -2,12 +2,23 @@ package cn.yili.mybatis.iter;
 
 public interface BaseBeanInterface {
 
-    String getGenOrderBy();
-    String getGenTable();
-    String getGenColumnNames();
-    String getGenNames();
-    String getGenUpdateWhere();
-    String getGenDefWhere();
-    String getGenSelectWhere();
-    String getGenUpdateSet();
+
+    String baseGenOrderBy();
+
+    String baseGenTable();
+
+    String baseGenColumnNames();
+
+    String baseGenNames();
+
+    String baseGenUpdateWhere();
+
+    String baseGenDefWhere();
+
+    String baseGenSelectWhere();
+
+    String baseGenUpdateSet();
+
+    String baseGenListNames();
+
 }

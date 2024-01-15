@@ -1,18 +1,23 @@
 package cn.yili.mybatis.ann;
 
 
-import cn.yili.mybatis.constant.Constant;
 import cn.yili.mybatis.entity.ComBean;
 import cn.yili.mybatis.iter.BaseBeanInterface;
 import cn.yili.mybatis.util.CamelUnderUtil;
 import com.google.auto.service.AutoService;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTrees;
-import com.sun.tools.javac.code.*;
+import com.sun.tools.javac.code.Attribute;
+import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
-import com.sun.tools.javac.util.*;
+import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.ListBuffer;
+import com.sun.tools.javac.util.Names;
+import com.sun.tools.javac.util.Pair;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,11 +25,11 @@ import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeKind;
 import javax.tools.Diagnostic;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
+import java.util.Random;
 import java.util.Set;
 
 
@@ -70,13 +75,10 @@ public class YiliTableProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        messager.printMessage(Diagnostic.Kind.NOTE, "Hello world!");
         Set<? extends Element> set = roundEnv.getElementsAnnotatedWith(Table.class);
         if (set != null) {
             for (Element element : roundEnv.getElementsAnnotatedWith(Table.class)) {
                 Table table = element.getAnnotation(Table.class);
-                messager.printMessage(Diagnostic.Kind.NOTE, "类名：" + element.getSimpleName().toString());
-                messager.printMessage(Diagnostic.Kind.NOTE, "TABLE：" + table);
                 JCTree jcTree = trees.getTree(element);
                 if (table != null) {
                     jcTree.accept(new TreeTranslator() {
@@ -99,6 +101,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                             }
 //
 //                            jcClassDecl.implementing = jcClassDecl.implementing.append(treeMaker.Ident(names.fromString("cn.yili.mybatis.iter.BaseBeanInterface")));
+                            //addTnterface(jcClassDecl, element, BaseBeanInterface.class);
                             super.visitClassDef(jcClassDecl);
                         }
                     });
@@ -110,9 +113,73 @@ public class YiliTableProcessor extends AbstractProcessor {
         return true;
     }
 
+    /**
+     * 判断有没有实现指定的接口
+     *
+     * @param jcClassDecl
+     * @param interfaceClass 接口
+     * @return 如果类已经实现了指定接口则返回true，否则返回false
+     */
+    private boolean hasInterface(JCTree.JCClassDecl jcClassDecl, Class<?> interfaceClass) {
+        messager.printMessage(Diagnostic.Kind.NOTE, "开始判断接口是否存在");
+        for (JCTree.JCExpression impl : jcClassDecl.implementing) {
+            if (impl.type.toString().equals(interfaceClass.getName())) {
+                messager.printMessage(Diagnostic.Kind.NOTE, "开始判断接口存在");
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
-     * 创建columnNames方法
+     * 导入包.
+     *
+     * @param element
+     * @param importClass
+     */
+    private void importPackage(Element element, Class<?> importClass) {
+        messager.printMessage(Diagnostic.Kind.NOTE, "导入包");
+        JCTree.JCCompilationUnit compilationUnit = (JCTree.JCCompilationUnit) trees.getPath(element).getCompilationUnit();
+        JCTree.JCFieldAccess fieldAccess = treeMaker.Select(treeMaker.Ident(names.fromString(importClass.getPackage().getName())), names.fromString(importClass.getSimpleName()));
+        JCTree.JCImport jcImport = treeMaker.Import(fieldAccess, false);
+        ListBuffer<JCTree> imports = new ListBuffer<>();
+        imports.add(jcImport);
+        for (int i = 0; i < compilationUnit.defs.size(); i++) {
+            imports.append(compilationUnit.defs.get(i));
+        }
+        compilationUnit.defs = imports.toList();
+        messager.printMessage(Diagnostic.Kind.NOTE, "导入完成" + compilationUnit.defs);
+    }
+
+    /**
+     * 添加实现接口.
+     *
+     * @param jcClassDecl
+     * @param element
+     * @param interfaceClass
+     */
+    public void addTnterface(JCTree.JCClassDecl jcClassDecl, Element element, Class<?> interfaceClass) {
+        //判断类有没有实现此接口
+        if (!hasInterface(jcClassDecl, interfaceClass)) {
+            // 导包（会自动去重）
+            importPackage(element, interfaceClass);
+
+            java.util.List<JCTree.JCExpression> implementing = jcClassDecl.implementing;
+            ListBuffer<JCTree.JCExpression> statements = new ListBuffer<>();
+            for (JCTree.JCExpression impl : implementing) {
+                statements.append(impl);
+            }
+            messager.printMessage(Diagnostic.Kind.NOTE, "开始创建实现类");
+            Symbol.ClassSymbol sym = new Symbol.ClassSymbol(Flags.AccessFlags, names.fromString(interfaceClass.getSimpleName()), null);
+            statements.append(treeMaker.Ident(sym));
+            messager.printMessage(Diagnostic.Kind.NOTE, "开始替换类");
+            jcClassDecl.implementing = statements.toList();
+            messager.printMessage(Diagnostic.Kind.NOTE, "替换完成" + ((JCTree.JCCompilationUnit) trees.getPath(element).getCompilationUnit()).defs);
+        }
+    }
+
+    /**
+     * 查询类信息、组装方法所需。并生成方法。
      *
      * @param supClass           父类
      * @param jcVariableDeclList 类中的所有属性
@@ -218,11 +285,20 @@ public class YiliTableProcessor extends AbstractProcessor {
         return comBeans;
     }
 
+    /**
+     * 加载数据、生成方法.
+     *
+     * @param comBeans
+     * @param element
+     * @param table
+     * @return
+     */
     public java.util.List<JCTree.JCMethodDecl> buildMethods(java.util.List<ComBean> comBeans, Element element, Table table) {
         messager.printMessage(Diagnostic.Kind.NOTE, "执行buildMethods" + comBeans);
         java.util.List<JCTree.JCMethodDecl> results = new ArrayList<>();
         StringBuffer columns = new StringBuffer();
         StringBuffer names2 = new StringBuffer();
+        StringBuffer names3 = new StringBuffer();
         StringBuffer orderBy = new StringBuffer();
         StringBuffer defWhere = new StringBuffer();
         StringBuffer tableStr = new StringBuffer();
@@ -265,6 +341,9 @@ public class YiliTableProcessor extends AbstractProcessor {
                 names2.append(PARAM_OBJECT);
                 names2.append(name);
                 names2.append("}");
+                names3.append(",#'{'list[{0}].");
+                names3.append(name);
+                names3.append("}");
 
                 if (comBean.isTableId()) {
                     updateWhere.append(" and `" + columnName + "` = #{" + PARAM_OBJECT + name + "}");
@@ -322,17 +401,18 @@ public class YiliTableProcessor extends AbstractProcessor {
             updateWhere.delete(0, updateWhere.length());
             updateWhere.append(tmp);
         }
-        results.add(buildMethod("getGenOrderBy", orderBy.toString()));
-        results.add(buildMethod("getGenTable", tableStr.toString()));
-        results.add(buildMethod("getGenColumnNames", columns.toString().substring(1)));
-        results.add(buildMethod("getGenNames", names2.toString().substring(1)));
-        results.add(buildMethod("getGenUpdateWhere", updateWhere.toString()));
-        results.add(buildMethod("getGenDefWhere", defWhere.toString()));
+        results.add(buildMethod("baseGenOrderBy", orderBy.toString()));
+        results.add(buildMethod("baseGenTable", tableStr.toString()));
+        results.add(buildMethod("baseGenColumnNames", columns.toString().substring(1)));
+        results.add(buildMethod("baseGenNames", names2.toString().substring(1)));
+        results.add(buildMethod("baseGenListNames", names3.toString().substring(1)));
+        results.add(buildMethod("baseGenUpdateWhere", updateWhere.toString()));
+        results.add(buildMethod("baseGenDefWhere", defWhere.toString()));
         messager.printMessage(Diagnostic.Kind.NOTE, "开始生成脚本");
         selectWhereStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
         updateSetStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
-        results.add(buildMethod("getGenSelectWhere", selectWhereStatement));
-        results.add(buildMethod("getGenUpdateSet", updateSetStatement));
+        results.add(buildMethod("baseGenSelectWhere", selectWhereStatement));
+        results.add(buildMethod("baseGenUpdateSet", updateSetStatement));
         messager.printMessage(Diagnostic.Kind.NOTE, "生成脚本结束");
         return results;
     }
@@ -343,9 +423,16 @@ public class YiliTableProcessor extends AbstractProcessor {
     //select
     //
 
+    /**
+     * 生成方法（方法名， 步骤）
+     *
+     * @param method
+     * @param statements
+     * @return
+     */
     public JCTree.JCMethodDecl buildMethod(String method, ListBuffer<JCTree.JCStatement> statements) {
         JCTree.JCBlock body = treeMaker.Block(0, statements.toList());
-        messager.printMessage(Diagnostic.Kind.NOTE, "代码块:"  + body.toString());
+        messager.printMessage(Diagnostic.Kind.NOTE, "代码块:" + body.toString());
         // 生成columnNames()方法
         return treeMaker
                 .MethodDef(treeMaker.Modifiers(com.sun.tools.javac.code.Flags.PUBLIC), names.fromString(method),
@@ -353,6 +440,13 @@ public class YiliTableProcessor extends AbstractProcessor {
                         List.nil(), List.nil(), List.nil(), body, null);
     }
 
+    /**
+     * 生成方法（方法名， 字符串）
+     *
+     * @param method
+     * @param str
+     * @return
+     */
     public JCTree.JCMethodDecl buildMethod(String method, String str) {
         ListBuffer<JCTree.JCStatement> statements = new ListBuffer<>();
 

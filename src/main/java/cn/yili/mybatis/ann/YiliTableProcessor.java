@@ -2,6 +2,7 @@ package cn.yili.mybatis.ann;
 
 
 import cn.yili.mybatis.entity.ComBean;
+import cn.yili.mybatis.entity.ComMethod;
 import cn.yili.mybatis.iter.BaseBeanInterface;
 import cn.yili.mybatis.util.CamelUnderUtil;
 import com.google.auto.service.AutoService;
@@ -27,6 +28,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Random;
@@ -85,15 +87,19 @@ public class YiliTableProcessor extends AbstractProcessor {
                         @Override
                         public void visitClassDef(JCTree.JCClassDecl jcClassDecl) {
                             List<JCTree.JCVariableDecl> jcVariableDeclList = List.nil();
+                            List<JCTree.JCMethodDecl> jcMethodDeclList = List.nil();
                             // 获取所有属性
                             for (JCTree tree : jcClassDecl.defs) {
                                 if (tree.getKind().equals(Tree.Kind.VARIABLE)) {
                                     JCTree.JCVariableDecl jcVariableDecl = (JCTree.JCVariableDecl) tree;
                                     jcVariableDeclList = jcVariableDeclList.append(jcVariableDecl);
+                                } else if(tree.getKind().equals(Tree.Kind.METHOD)) {
+                                    JCTree.JCMethodDecl jcMethodDecl = (JCTree.JCMethodDecl) tree;
+                                    jcMethodDeclList = jcMethodDeclList.append(jcMethodDecl);
                                 }
                             }
                             messager.printMessage(Diagnostic.Kind.NOTE, "获取到属性列表：" + jcVariableDeclList.size());
-                            java.util.List<JCTree.JCMethodDecl> printMethods = buildMethods(makeColumnNamesMethodDecl(table.supClass(), jcVariableDeclList), element, table);
+                            java.util.List<JCTree.JCMethodDecl> printMethods = buildMethods(makeColumnNamesMethodDecl(table.supClass(), jcVariableDeclList), element, table, makeMethodDecl(table.supClass(), jcMethodDeclList));
                             if (printMethods != null && printMethods.size() > 0) {
                                 for (JCTree.JCMethodDecl printMethod : printMethods) {
                                     jcClassDecl.defs = jcClassDecl.defs.append(printMethod);
@@ -178,6 +184,64 @@ public class YiliTableProcessor extends AbstractProcessor {
         }
     }
 
+
+    @SneakyThrows
+    private ComMethod makeMethodDecl(String supClass, List<JCTree.JCMethodDecl> jcMethodDeclList) {
+        messager.printMessage(Diagnostic.Kind.NOTE, "开始执行方法对象");
+        ComMethod comMethod = new ComMethod();
+        if(jcMethodDeclList!=null && jcMethodDeclList.size() > 0) {
+            for (JCTree.JCMethodDecl jcMethodDecl : jcMethodDeclList) {
+                if(jcMethodDecl != null) {
+                    for (JCTree.JCAnnotation annotation : jcMethodDecl.mods.getAnnotations()) {
+                        if(annotation != null) {
+                            if(annotation.getAnnotationType() != null) {
+                                if(annotation.getAnnotationType().type != null) {
+                                    if ("cn.yili.mybatis.ann.OverrideOrderBy".equals(annotation.getAnnotationType().type.toString())) {
+                                        comMethod.setOverrideOrderBy(true);
+                                        comMethod.setOverriderOrderByMethod(jcMethodDecl.getName().toString());
+                                    }
+                                    if ("cn.yili.mybatis.ann.AddSelectCondition".equals(annotation.getAnnotationType().type.toString())) {
+                                        comMethod.setAddSelectCondition(true);
+                                        java.util.List<String> selects = comMethod.getAddSelectConditionMethod();
+                                        if (selects == null) {
+                                            selects = new ArrayList<>();
+                                            comMethod.setAddSelectConditionMethod(selects);
+                                        }
+                                        selects.add(jcMethodDecl.getName().toString());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        messager.printMessage(Diagnostic.Kind.NOTE, "开始执行超类方法对象");
+        Class<?> clss = Class.forName(supClass);
+        Method[] methods = clss.getMethods();
+        if(methods != null && methods.length > 0) {
+            for (Method method : methods) {
+                OverrideOrderBy orderBy = method.getDeclaredAnnotation(OverrideOrderBy.class);
+                if(orderBy != null && comMethod.isOverrideOrderBy()) {
+                    comMethod.setOverrideOrderBy(true);
+                    comMethod.setOverriderOrderByMethod(method.getName());
+                }
+                AddSelectCondition addSelectCondition = method.getDeclaredAnnotation(AddSelectCondition.class);
+                if(addSelectCondition != null) {
+                    java.util.List<String> selects = comMethod.getAddSelectConditionMethod();
+                    if(selects == null) {
+                        selects = new ArrayList<>();
+                        comMethod.setAddSelectCondition(true);
+                        comMethod.setAddSelectConditionMethod(selects);
+                    }
+                    selects.add(method.getName());
+                }
+            }
+        }
+        messager.printMessage(Diagnostic.Kind.NOTE, "方法返回：" + comMethod);
+        return comMethod;
+    }
+
     /**
      * 查询类信息、组装方法所需。并生成方法。
      *
@@ -189,11 +253,9 @@ public class YiliTableProcessor extends AbstractProcessor {
     private java.util.List<ComBean> makeColumnNamesMethodDecl(String supClass, List<JCTree.JCVariableDecl> jcVariableDeclList) {
         messager.printMessage(Diagnostic.Kind.NOTE, "执行makeColumnNamesMethodDecl");
         java.util.List<ComBean> comBeans = null;
-        messager.printMessage(Diagnostic.Kind.NOTE, "jcVariableDeclList.size()=" + jcVariableDeclList.size());
         if (jcVariableDeclList != null && jcVariableDeclList.size() > 0) {
             comBeans = new ArrayList<>();
             for (JCTree.JCVariableDecl jcVariableDecl : jcVariableDeclList) {
-                messager.printMessage(Diagnostic.Kind.NOTE, "得到ComBean对象" + jcVariableDecl);
                 ComBean comBean = new ComBean();
                 comBeans.add(comBean);
                 comBean.setName(jcVariableDecl.getName().toString());
@@ -205,7 +267,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                             for (Pair<Symbol.MethodSymbol, Attribute> a : an.attribute.values) {
                                 if ("value()".equals(a.fst.toString())) {
                                     String tmp = a.snd.getValue().toString();
-                                    comBean.setColumValue(a.snd.getValue().toString());
+                                    comBean.setColumValue(tmp);
                                 }
                             }
                             break;
@@ -228,10 +290,29 @@ public class YiliTableProcessor extends AbstractProcessor {
                                     comBean.setOrder(Integer.parseInt(a.snd.getValue().toString()));
                                 }
                             }
+                            if(comBean.getOrderByVal()!= null && !"".equals(comBean.getOrderByVal())) {
+                                comBean.setOrderByVal("DESC");
+                            }
+                            if(comBean.getOrder() == null) {
+                                comBean.setOrder(1);
+                            }
+                            break;
+                        }
+                        case "cn.yili.mybatis.ann.IfFieldCondition": {
+                            comBean.setIfFieldCondition(true);
+                            for (Pair<Symbol.MethodSymbol, Attribute> a : an.attribute.values) {
+                                if ("value()".equals(a.fst.toString())) {
+                                    comBean.setIfFieldConditionName(a.snd.getValue().toString());
+                                }
+                            }
                             break;
                         }
                         case "cn.yili.mybatis.ann.IgnoreColumn": {
                             comBean.setIgnore(true);
+                            break;
+                        }
+                        case "cn.yili.mybatis.ann.IgnoreInsertColumn": {
+                            comBean.setIgnoreInsert(true);
                             break;
                         }
                         case "cn.yili.mybatis.ann.TableId": {
@@ -249,8 +330,6 @@ public class YiliTableProcessor extends AbstractProcessor {
         Field[] fields = clss.getDeclaredFields();
 
         for (Field field : fields) {
-            messager.printMessage(Diagnostic.Kind.NOTE, "得到Field对象" + field.getName());
-            messager.printMessage(Diagnostic.Kind.NOTE, "得到注解对象" + field.getDeclaredAnnotation(IgnoreColumn.class));
             ComBean comBean = new ComBean();
             comBeans.add(comBean);
             comBean.setName(field.getName());
@@ -259,7 +338,15 @@ public class YiliTableProcessor extends AbstractProcessor {
             if (ignoreColumn != null) {
                 comBean.setIgnore(true);
             }
-
+            IgnoreInsertColumn ignoreInsertColumn = field.getDeclaredAnnotation(IgnoreInsertColumn.class);
+            if(ignoreInsertColumn != null) {
+                comBean.setIgnoreInsert(true);
+            }
+            IfFieldCondition ifFieldCondition = field.getDeclaredAnnotation(IfFieldCondition.class);
+            if(ifFieldCondition != null) {
+                comBean.setIfFieldCondition(true);
+                comBean.setIfFieldConditionName(ifFieldCondition.value());
+            }
             TableId tableId = field.getDeclaredAnnotation(TableId.class);
             if (tableId != null) {
                 comBean.setTableId(true);
@@ -281,6 +368,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                 comBean.setOrderByVal(orderBy.value());
                 comBean.setOrder(orderBy.order());
             }
+            messager.printMessage(Diagnostic.Kind.NOTE, "字段信息: " + comBean);
         }
         return comBeans;
     }
@@ -293,8 +381,8 @@ public class YiliTableProcessor extends AbstractProcessor {
      * @param table
      * @return
      */
-    public java.util.List<JCTree.JCMethodDecl> buildMethods(java.util.List<ComBean> comBeans, Element element, Table table) {
-        messager.printMessage(Diagnostic.Kind.NOTE, "执行buildMethods" + comBeans);
+    public java.util.List<JCTree.JCMethodDecl> buildMethods(java.util.List<ComBean> comBeans, Element element, Table table, ComMethod comMethod) {
+        messager.printMessage(Diagnostic.Kind.NOTE, "执行buildMethods" + comBeans + comMethod);
         java.util.List<JCTree.JCMethodDecl> results = new ArrayList<>();
         StringBuffer columns = new StringBuffer();
         StringBuffer names2 = new StringBuffer();
@@ -303,6 +391,9 @@ public class YiliTableProcessor extends AbstractProcessor {
         StringBuffer defWhere = new StringBuffer();
         StringBuffer tableStr = new StringBuffer();
         StringBuffer updateWhere = new StringBuffer();
+        StringBuffer insertColumns = new StringBuffer();
+        StringBuffer insertNames2 = new StringBuffer();
+        StringBuffer insertNames3 = new StringBuffer();
         java.util.List<ComBean> orderByList = new ArrayList<>();
         java.util.List<ComBean> defWhereList = new ArrayList<>();
         ListBuffer<JCTree.JCStatement> selectWhereStatement = new ListBuffer<>();
@@ -320,7 +411,8 @@ public class YiliTableProcessor extends AbstractProcessor {
             tableStr.append(" ");
         }
         if (comBeans != null && comBeans.size() > 0) {
-            for (ComBean comBean : comBeans) {
+            for (int jj = 0; jj<comBeans.size();jj ++) {
+                ComBean comBean = comBeans.get(jj);
                 if (comBean.isIgnore()) {
                     continue;
                 }
@@ -330,9 +422,22 @@ public class YiliTableProcessor extends AbstractProcessor {
                 if (comBean.isColumn()) {
                     columnName = comBean.getColumValue();
                 } else {
-
                     columnName = CamelUnderUtil.underName(comBean.getName());
                 }
+                if(!comBean.isIgnoreInsert()) {
+                    insertColumns.append(",");
+                    insertColumns.append("`");
+                    insertColumns.append(columnName);
+                    insertColumns.append("`");
+                    insertNames2.append(",#{");
+                    insertNames2.append(PARAM_OBJECT);
+                    insertNames2.append(name);
+                    insertNames2.append("}");
+                    insertNames3.append(",#'{'list[{0}].");
+                    insertNames3.append(name);
+                    insertNames3.append("}");
+                }
+
                 columns.append(",");
                 columns.append("`");
                 columns.append(columnName);
@@ -345,25 +450,32 @@ public class YiliTableProcessor extends AbstractProcessor {
                 names3.append(name);
                 names3.append("}");
 
+
                 if (comBean.isTableId()) {
                     updateWhere.append(" and `" + columnName + "` = #{" + PARAM_OBJECT + name + "}");
                 } else {
                     updateSetStatement.append(treeMaker.If(
                             treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(name, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
-                            treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  `" + columnName + "` = #{" + PARAM_OBJECT + name + "} " + ", "))), null));
+                            treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  `" + columnName + "` = #{" + PARAM_OBJECT + name + "} " + (jj+1<comBeans.size() && !comBeans.get(comBeans.size()-1).isTableId()? ", ": "")))),
+                            null));
                 }
                 if (comBean.isDefWhere()) {
                     defWhereList.add(comBean);
                 } else {
                     selectWhereStatement.append(treeMaker.If(
                             treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(name, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
-                            treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and `" + columnName + "` = #{" + PARAM_OBJECT + name + "} "))), null));
+                            comBean.isIfFieldCondition()?treeMaker.If(
+                                    treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString(comBean.getIfFieldConditionName())), List.nil()),
+                                    treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and `" + columnName + "` = #{" + PARAM_OBJECT + name + "} "))), null)
+                                    :treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and `" + columnName + "` = #{" + PARAM_OBJECT + name + "} "))),
+                            null));
                 }
                 if (comBean.isOrderBy()) {
                     orderByList.add(comBean);
                 }
             }
         }
+        messager.printMessage(Diagnostic.Kind.NOTE, "开始设置排序" + orderByList);
         if (orderByList != null && orderByList.size() > 0) {
             orderByList.sort((a, b) -> a.getOrder() - b.getOrder());
             orderBy.append(" order by ");
@@ -381,6 +493,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                 }
             }
         }
+        messager.printMessage(Diagnostic.Kind.NOTE, "开始设置默认WHERE");
         if (defWhereList != null && defWhereList.size() > 0) {
             defWhere.append(" where ");
             for (int i = 0; i < defWhereList.size(); i++) {
@@ -401,18 +514,39 @@ public class YiliTableProcessor extends AbstractProcessor {
             updateWhere.delete(0, updateWhere.length());
             updateWhere.append(tmp);
         }
-        results.add(buildMethod("baseGenOrderBy", orderBy.toString()));
+
         results.add(buildMethod("baseGenTable", tableStr.toString()));
         results.add(buildMethod("baseGenColumnNames", columns.toString().substring(1)));
         results.add(buildMethod("baseGenNames", names2.toString().substring(1)));
         results.add(buildMethod("baseGenListNames", names3.toString().substring(1)));
+
+        results.add(buildMethod("baseGenInertColumnNames", insertColumns.toString().substring(1)));
+        results.add(buildMethod("baseGenInsertNames", insertNames2.toString().substring(1)));
+        results.add(buildMethod("baseGenInsertListNames", insertNames3.toString().substring(1)));
+
+
         results.add(buildMethod("baseGenUpdateWhere", updateWhere.toString()));
         results.add(buildMethod("baseGenDefWhere", defWhere.toString()));
         messager.printMessage(Diagnostic.Kind.NOTE, "开始生成脚本");
+
+        if(comMethod.isAddSelectCondition()) {
+            for(String methodName : comMethod.getAddSelectConditionMethod()) {
+                selectWhereStatement.append(treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")),treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString(methodName)), List.nil()))));
+            }
+        }
         selectWhereStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
-        updateSetStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
         results.add(buildMethod("baseGenSelectWhere", selectWhereStatement));
+
+        updateSetStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
         results.add(buildMethod("baseGenUpdateSet", updateSetStatement));
+
+        if(comMethod.isOverrideOrderBy()) {
+            ListBuffer<JCTree.JCStatement> orderByStatement = new ListBuffer<>();
+            orderByStatement.append(treeMaker.Return(treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString(comMethod.getOverriderOrderByMethod())), List.nil())));
+            results.add(buildMethod("baseGenOrderBy", orderByStatement));
+        } else {
+            results.add(buildMethod("baseGenOrderBy", orderBy.toString()));
+        }
         messager.printMessage(Diagnostic.Kind.NOTE, "生成脚本结束");
         return results;
     }

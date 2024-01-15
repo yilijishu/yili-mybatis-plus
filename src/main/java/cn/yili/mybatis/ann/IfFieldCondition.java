@@ -1,19 +1,16 @@
 package cn.yili.mybatis.ann;
 
-import cn.yili.mybatis.constant.Constant;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 默认order by 条件
+ * 添加字段添加and判断条件。
+ * 所设置的字段名必须要返回boolean
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface OrderBy {
-    String value() default Constant.OrderByValue.DESC;
-    int order() default 1;
-
+public @interface IfFieldCondition {
+    String value(); //字段名 方法名
 }

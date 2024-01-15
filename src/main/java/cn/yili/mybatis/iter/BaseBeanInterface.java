@@ -21,4 +21,10 @@ public interface BaseBeanInterface {
 
     String baseGenListNames();
 
+    String baseGenInertColumnNames();
+
+    String baseGenInsertNames();
+
+    String baseGenInsertListNames();
+
 }

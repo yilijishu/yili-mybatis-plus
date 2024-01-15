@@ -117,9 +117,9 @@ public interface BaseMapper<T> {
                     sbf.append("insert into ");
                     sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
                     sbf.append(" (");
-                    sbf.append(obj.getClass().getMethod("baseGenColumnNames").invoke(obj));
+                    sbf.append(obj.getClass().getMethod("baseGenInertColumnNames").invoke(obj));
                     sbf.append(") values ");
-                    MessageFormat messageFormat = new MessageFormat((String) obj.getClass().getMethod("baseGenListNames").invoke(obj));
+                    MessageFormat messageFormat = new MessageFormat((String) obj.getClass().getMethod("baseGenInsertListNames").invoke(obj));
                     for (int i = 0; i < list.size(); i++) {
                         sbf.append("(");
                         sbf.append(messageFormat.format(new Object[]{i}));
@@ -141,9 +141,9 @@ public interface BaseMapper<T> {
             sbf.append("insert into ");
             sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
             sbf.append(" (");
-            sbf.append(obj.getClass().getMethod("baseGenColumnNames").invoke(obj));
+            sbf.append(obj.getClass().getMethod("baseGenInertColumnNames").invoke(obj));
             sbf.append(") values (");
-            sbf.append(obj.getClass().getMethod("baseGenNames").invoke(obj));
+            sbf.append(obj.getClass().getMethod("baseGenInsertNames").invoke(obj));
             sbf.append(")");
 
             return sbf.toString();

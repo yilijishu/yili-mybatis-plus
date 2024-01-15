@@ -2,6 +2,7 @@ cn/yili/mybatis/constant/Constant.class
 cn/yili/mybatis/mapper/BaseMapper.class
 cn/yili/mybatis/ann/Column.class
 cn/yili/mybatis/entity/BaseEntity.class
+cn/yili/mybatis/iter/BaseBeanInterface.class
 cn/yili/mybatis/ann/YiliTableProcessor$1.class
 cn/yili/mybatis/entity/ComBean.class
 cn/yili/mybatis/ann/DefWhere.class

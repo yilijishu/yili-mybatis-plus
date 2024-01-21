@@ -307,12 +307,13 @@ public class YiliTableProcessor extends AbstractProcessor {
                             comBean.setOrderBy(true);
                             for (Pair<Symbol.MethodSymbol, Attribute> a : an.attribute.values) {
                                 if ("value()".equals(a.fst.toString())) {
+                                    messager.printMessage(Diagnostic.Kind.NOTE, a.snd.getValue().toString());
                                     comBean.setOrderByVal(a.snd.getValue().toString());
                                 } else if ("order()".equals(a.fst.toString())) {
                                     comBean.setOrder(Integer.parseInt(a.snd.getValue().toString()));
                                 }
                             }
-                            if(comBean.getOrderByVal()!= null && !"".equals(comBean.getOrderByVal())) {
+                            if(comBean.getOrderByVal() ==  null || "".equals(comBean.getOrderByVal())) {
                                 comBean.setOrderByVal("DESC");
                             }
                             if(comBean.getOrder() == null) {

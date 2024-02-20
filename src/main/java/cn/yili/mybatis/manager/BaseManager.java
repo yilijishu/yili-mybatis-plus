@@ -2,47 +2,47 @@ package cn.yili.mybatis.manager;
 
 import cn.yili.mybatis.entity.Page;
 import cn.yili.mybatis.mapper.BaseMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-public abstract class BaseManager<T> {
+public class BaseManager<T> {
     //-----------------------------------------标准产物START-----------------------------------------
+    @Autowired
+    private BaseMapper<T> mapper;
 
     public Integer insert(T p) {
-        return getMapper().insert(p);
+        return mapper.insert(p);
     }
 
     public Integer insertAll(List<T> p) {
-        return getMapper().insertAll(p);
+        return mapper.insertAll(p);
     }
 
     public Integer update(T p) {
-        return getMapper().update(p);
+        return mapper.update(p);
     }
 
     public List<T> select(T p) {
-        return getMapper().select(p, null);
+        return mapper.select(p, null);
     }
 
     public List<T> select(T p, Page page) {
         page.setCount(count(p));
         if (page.isQuery()) {
-            return getMapper().select(p, page);
+            return mapper.select(p, page);
         } else {
             return null;
         }
     }
 
     public T get(T p) {
-        return getMapper().get(p);
+        return mapper.get(p);
     }
 
     public Integer count(T p) {
-        return getMapper().count(p);
+        return mapper.count(p);
     }
-    //-----------------------------------------标准产物END-----------------------------------------
-    public abstract BaseMapper<T> getMapper();
-
 
 
 }

@@ -1,14 +1,16 @@
 cn/yili/mybatis/service/BaseService.class
 cn/yili/mybatis/ann/Column.class
 cn/yili/mybatis/ann/IfFieldCondition.class
+cn/yili/mybatis/wapper/QuerySql.class
 cn/yili/mybatis/ann/OrderBy.class
 cn/yili/mybatis/ann/TableId.class
 cn/yili/mybatis/util/CamelUnderUtil.class
-cn/yili/mybatis/service/BaseServiceImpl.class
+cn/yili/mybatis/wapper/DeleteSql.class
 cn/yili/mybatis/mapper/BaseMapper$BaseSqlProvider.class
 cn/yili/mybatis/ann/Table.class
 cn/yili/mybatis/constant/Constant.class
 cn/yili/mybatis/mapper/BaseMapper.class
+cn/yili/mybatis/wapper/UpdateSql.class
 cn/yili/mybatis/entity/ComMethod.class
 cn/yili/mybatis/iter/BaseBeanInterface.class
 cn/yili/mybatis/ann/YiliTableProcessor$1.class
@@ -19,6 +21,7 @@ cn/yili/mybatis/ann/IgnoreColumn.class
 cn/yili/mybatis/ann/IgnoreInsertColumn.class
 cn/yili/mybatis/manager/BaseManager.class
 cn/yili/mybatis/ann/YiliTableProcessor.class
+cn/yili/mybatis/ann/VirtualTableId.class
 cn/yili/mybatis/ann/AddSelectCondition.class
 cn/yili/mybatis/entity/Page.class
 cn/yili/mybatis/constant/Constant$Oper.class

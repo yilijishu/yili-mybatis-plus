@@ -27,4 +27,6 @@ public interface BaseBeanInterface {
 
     String baseGenInsertListNames();
 
+    String baseGenId();
+
 }

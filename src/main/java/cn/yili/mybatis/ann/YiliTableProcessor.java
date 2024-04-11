@@ -18,6 +18,7 @@ import com.sun.tools.javac.util.Names;
 import com.sun.tools.javac.util.Pair;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -342,6 +343,9 @@ public class YiliTableProcessor extends AbstractProcessor {
                             comBean.setTableId(true);
                             break;
                         }
+                        case "cn.yili.mybatis.ann.VirtualTableId": {
+                            comBean.setVirtualTableId(true);
+                        }
                         default:
                             break;
                     }
@@ -413,26 +417,33 @@ public class YiliTableProcessor extends AbstractProcessor {
         StringBuffer orderBy = new StringBuffer();
         StringBuffer defWhere = new StringBuffer();
         StringBuffer tableStr = new StringBuffer();
-        StringBuffer updateWhere = new StringBuffer();
+        //StringBuffer updateWhere = new StringBuffer();
+        StringBuffer baseGenUpdateAllSet = new StringBuffer();
         StringBuffer insertColumns = new StringBuffer();
         StringBuffer insertNames2 = new StringBuffer();
         StringBuffer insertNames3 = new StringBuffer();
+        StringBuffer tableId = new StringBuffer();
         java.util.List<ComBean> orderByList = new ArrayList<>();
         java.util.List<ComBean> defWhereList = new ArrayList<>();
         ListBuffer<JCTree.JCStatement> selectWhereStatement = new ListBuffer<>();
         ListBuffer<JCTree.JCStatement> updateSetStatement = new ListBuffer<>();
+        ListBuffer<JCTree.JCStatement> updateWhereStatement = new ListBuffer<>();
         selectWhereStatement.append(treeMaker.VarDef(treeMaker.Modifiers(Flags.PARAMETER), names.fromString("result"), treeMaker.Ident(names.fromString("String")), treeMaker.Literal("")));
         updateSetStatement.append(treeMaker.VarDef(treeMaker.Modifiers(Flags.PARAMETER), names.fromString("result"), treeMaker.Ident(names.fromString("String")), treeMaker.Literal("")));
-
+        updateWhereStatement.append(treeMaker.VarDef(treeMaker.Modifiers(Flags.PARAMETER), names.fromString("result"), treeMaker.Ident(names.fromString("String")), treeMaker.Literal("")));
         if (table.value() != null && !"".equals(table.value())) {
-            tableStr.append(" ");
+            tableStr.append(" `");
             tableStr.append(table.value());
-            tableStr.append(" ");
+            tableStr.append("` ");
         } else {
-            tableStr.append(" ");
+            tableStr.append(" `");
             tableStr.append(CamelUnderUtil.underName(element.getSimpleName().toString()));
-            tableStr.append(" ");
+            tableStr.append("` ");
         }
+        String tableIdVal = null;
+        String tableIdColumnVal = null;
+        String virtualTableId = null;
+        String virtualTableIdColumn = null;
         if (comBeans != null && comBeans.size() > 0) {
             for (int jj = 0; jj<comBeans.size();jj ++) {
                 ComBean comBean = comBeans.get(jj);
@@ -473,14 +484,21 @@ public class YiliTableProcessor extends AbstractProcessor {
                 names3.append(name);
                 names3.append("}");
 
-
+                if(comBean.isVirtualTableId()) {
+                    virtualTableId = name;
+                    virtualTableIdColumn = columnName;
+                }
                 if (comBean.isTableId()) {
-                    updateWhere.append(" and `" + columnName + "` = #{" + PARAM_OBJECT + name + "}");
-                } else {
+                    //updateWhere.append(" and `" + columnName + "` = #{" + PARAM_OBJECT + name + "}");
+                    tableId.append(" `" + columnName + "` ");
+                    tableIdVal = name;
+                    tableIdColumnVal = columnName;
+                } else if(!comBean.isVirtualTableId()){
                     updateSetStatement.append(treeMaker.If(
                             treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(name, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
                             treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  `" + columnName + "` = #{" + PARAM_OBJECT + name + "} " +  ","))),
                             null));
+                    baseGenUpdateAllSet.append("`" + columnName + "` = #{" + name + "} ,");
                 }
                 if (comBean.isDefWhere()) {
                     defWhereList.add(comBean);
@@ -532,11 +550,20 @@ public class YiliTableProcessor extends AbstractProcessor {
                     defWhere.append(" and ");
                 }
             }
-        } else {
-            String tmp = updateWhere.toString().replace("and", "where");
-            updateWhere.delete(0, updateWhere.length());
-            updateWhere.append(tmp);
         }
+//        } else {
+//            //String tmp = updateWhere.toString().replace("and", "where");
+//            //updateWhere.delete(0, updateWhere.length());
+//            //updateWhere.append(tmp);
+//        }
+
+        if(StringUtils.isNotBlank(tableIdVal)) {
+            updateWhereStatement.append(treeMaker.If(treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(tableIdVal, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
+                    treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  `" + tableIdColumnVal + "` = #{" + PARAM_OBJECT + tableIdVal + "} "))),
+                    StringUtils.isNotBlank(virtualTableId) ? treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  `" + virtualTableIdColumn + "` = #{" + PARAM_OBJECT + virtualTableId + "} "))) : null
+                    ));
+        }
+
 
         results.add(buildMethod("baseGenTable", tableStr.toString()));
         results.add(buildMethod("baseGenColumnNames", columns.toString().substring(1)));
@@ -548,8 +575,10 @@ public class YiliTableProcessor extends AbstractProcessor {
         results.add(buildMethod("baseGenInsertListNames", insertNames3.toString().substring(1)));
 
 
-        results.add(buildMethod("baseGenUpdateWhere", updateWhere.toString()));
+        //results.add(buildMethod("baseGenUpdateWhere", updateWhere.toString()));
         results.add(buildMethod("baseGenDefWhere", defWhere.toString()));
+        results.add(buildMethod("baseGenId", tableId.toString()));
+        results.add(buildMethod("baseGenUpdateAllSet", baseGenUpdateAllSet.substring(0, baseGenUpdateAllSet.length() - 1)));
         messager.printMessage(Diagnostic.Kind.NOTE, "开始生成脚本");
 
         if(comMethod.isAddSelectCondition()) {
@@ -565,6 +594,9 @@ public class YiliTableProcessor extends AbstractProcessor {
                         List.of(treeMaker.Literal(1), treeMaker.Binary(JCTree.Tag.MINUS, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("result")), names.fromString("length")), List.nil()), treeMaker.Literal(1)))))));
         updateSetStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
         results.add(buildMethod("baseGenUpdateSet", updateSetStatement));
+
+        updateWhereStatement.append(treeMaker.Return(treeMaker.Ident(names.fromString("result"))));
+        results.add(buildMethod("baseGenUpdateWhere", updateWhereStatement));
 
         if(comMethod.isOverrideOrderBy()) {
             ListBuffer<JCTree.JCStatement> orderByStatement = new ListBuffer<>();

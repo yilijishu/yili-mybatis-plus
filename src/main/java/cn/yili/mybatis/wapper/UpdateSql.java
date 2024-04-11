@@ -6,9 +6,9 @@ import org.apache.commons.lang3.StringUtils;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-public class QuerySql<Entity> {
+public class UpdateSql<Entity> {
 
-    private StringBuilder select = null;
+    private StringBuilder set = null;
 
     private StringBuilder where = null;
 
@@ -18,27 +18,16 @@ public class QuerySql<Entity> {
 
     private Class<?> entityClass;
 
-    public QuerySql(Entity t) {
+    public UpdateSql(Entity t) {
         this.t = t;
         entityClass = t.getClass();
-        this.select = new StringBuilder();
+        this.set = new StringBuilder();
         this.where = new StringBuilder();
         this.orderBy = new StringBuilder();
     }
 
-    public QuerySql select(String... column) {
-        if (column != null && column.length > 0) {
-            select.append(String.join(", ", column));
-        }
-        return this;
-    }
 
-    public QuerySql count() {
-        select.append(" count(1) ");
-        return this;
-    }
-
-    public QuerySql in(String column, List ins) {
+    public UpdateSql in(String column, List ins) {
         if (StringUtils.isNotBlank(column) && ins != null && ins.size() > 0) {
             where.append(" and ");
             where.append(column);
@@ -59,7 +48,7 @@ public class QuerySql<Entity> {
         return this;
     }
 
-    public QuerySql isNotNull(String column) {
+    public UpdateSql isNotNull(String column) {
         if (StringUtils.isNotBlank(column)) {
             where.append(" and ");
             where.append(column);
@@ -68,7 +57,7 @@ public class QuerySql<Entity> {
         return this;
     }
 
-    public QuerySql isNull(String column) {
+    public UpdateSql isNull(String column) {
         if (StringUtils.isNotBlank(column)) {
             where.append(" and ");
             where.append(column);
@@ -78,7 +67,7 @@ public class QuerySql<Entity> {
     }
 
 
-    public QuerySql lt(String column, Object obj) {
+    public UpdateSql lt(String column, Object obj) {
         if (StringUtils.isNotBlank(column) && obj != null) {
             where.append(" and ");
             where.append(column);
@@ -92,7 +81,7 @@ public class QuerySql<Entity> {
         return this;
     }
 
-    public QuerySql ltEq(String column, Object obj) {
+    public UpdateSql ltEq(String column, Object obj) {
         if (StringUtils.isNotBlank(column) && obj != null) {
             where.append(" and ");
             where.append(column);
@@ -106,7 +95,7 @@ public class QuerySql<Entity> {
         return this;
     }
 
-    public QuerySql gt(String column, Object obj) {
+    public UpdateSql gt(String column, Object obj) {
         if (StringUtils.isNotBlank(column) && obj != null) {
             where.append(" and ");
             where.append(column);
@@ -120,7 +109,7 @@ public class QuerySql<Entity> {
         return this;
     }
 
-    public QuerySql gtEq(String column, Object obj) {
+    public UpdateSql gtEq(String column, Object obj) {
         if (StringUtils.isNotBlank(column) && obj != null) {
             where.append(" and ");
             where.append(column);
@@ -134,49 +123,26 @@ public class QuerySql<Entity> {
         return this;
     }
 
-    public QuerySql eq(String column, Object obj) {
+    public UpdateSql set(String column, Object obj) {
         if (StringUtils.isNotBlank(column) && obj != null) {
-            where.append(" and ");
-            where.append(column);
-            where.append(" = ");
+            if (set.length() > 2) {
+                set.append(" , ");
+            }
+            set.append(column);
+            set.append(" = ");
             if (obj instanceof Integer || obj instanceof Long || obj instanceof Boolean) {
-                where.append(obj);
+                set.append(obj);
             } else {
-                where.append("'" + obj + "'");
+                set.append("'" + obj + "'");
             }
         }
         return this;
     }
 
-    public QuerySql orderByDesc(String column) {
-        if (orderBy.length() > 1) {
-            orderBy.append(" ,");
-        }
-        orderBy.append(column);
-        orderBy.append(" desc ");
-        return this;
-    }
-
-    public QuerySql orderByAsc(String column) {
-        if (orderBy.length() > 1) {
-            orderBy.append(" ,");
-        }
-        orderBy.append(column);
-        orderBy.append(" asc ");
-        return this;
-    }
-
-    public String toSqlOne() {
-        String result = toSql();
-        return result + " limit 1";
-    }
 
     public String toSql() {
         StringBuilder result = new StringBuilder();
         String table = "";
-        String columns = "";
-        String defWhere = "";
-        String defOrderBy = "";
         try {
             Object tableObj = entityClass.getMethod("baseGenTable").invoke(t);
             if (tableObj != null) {
@@ -184,24 +150,7 @@ public class QuerySql<Entity> {
             } else {
                 throw new RuntimeException("没有找到有效的实体");
             }
-            Object baseGenSelectWhere = entityClass.getMethod("baseGenSelectWhere").invoke(t);
-            if (baseGenSelectWhere != null) {
-                columns = baseGenSelectWhere.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体");
-            }
-            Object baseGenDefWhere = entityClass.getMethod("baseGenDefWhere").invoke(t);
-            if (baseGenDefWhere != null) {
-                defWhere = baseGenDefWhere.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体.");
-            }
-            Object baseGenOrderBy = entityClass.getMethod("baseGenOrderBy").invoke(t);
-            if (baseGenOrderBy != null) {
-                defOrderBy = baseGenOrderBy.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体");
-            }
+
 
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
@@ -210,27 +159,21 @@ public class QuerySql<Entity> {
         } catch (IllegalAccessException e) {
             throw new RuntimeException(e);
         }
-        result.append("select ");
-        if (select.length() > 3) {
-            result.append(select);
-        } else {
-            result.append(columns);
-        }
-        result.append(" from ");
+        result.append(" update ");
         result.append(table);
-        if (StringUtils.isNotBlank(defWhere)) {
-            result.append(defWhere);
-            result.append(where);
-        } else if (where.length() > 5) {
-            result.append("where ");
+        result.append(" set ");
+        if (StringUtils.isNotBlank(set)) {
+            result.append(set);
+        } else {
+            throw new RuntimeException("无效的修改,没有修改任何字段及其值");
+        }
+        if (where.length() > 5) {
+            result.append(" where ");
             result.append(where.substring(4));
+        } else {
+            throw new RuntimeException("无效的修改，没有条件语句存在");
         }
-        if (orderBy.length() > 2) {
-            result.append(" order by ");
-            result.append(orderBy);
-        } else if (StringUtils.isNotBlank(defOrderBy)) {
-            result.append(defOrderBy);
-        }
+
         return result.toString();
     }
 

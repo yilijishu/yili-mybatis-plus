@@ -30,4 +30,7 @@ public class ComBean {
     //判断是否增加判断条件
     private boolean ifFieldCondition = false;
     private String ifFieldConditionName;
+
+    private boolean virtualTableId = false;
+
 }

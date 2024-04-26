@@ -18,6 +18,8 @@ public class QuerySql<Entity> {
 
     private Class<?> entityClass;
 
+    private boolean selected = false;
+
     public QuerySql(Entity t) {
         this.t = t;
         entityClass = t.getClass();
@@ -29,12 +31,14 @@ public class QuerySql<Entity> {
     public QuerySql select(String... column) {
         if (column != null && column.length > 0) {
             select.append(String.join(", ", column));
+            selected = true;
         }
         return this;
     }
 
     public QuerySql count() {
         select.append(" count(1) ");
+        selected = true;
         return this;
     }
 
@@ -184,9 +188,9 @@ public class QuerySql<Entity> {
             } else {
                 throw new RuntimeException("没有找到有效的实体");
             }
-            Object baseGenSelectWhere = entityClass.getMethod("baseGenSelectWhere").invoke(t);
-            if (baseGenSelectWhere != null) {
-                columns = baseGenSelectWhere.toString();
+            Object baseGenColumnNames = entityClass.getMethod("baseGenColumnNames").invoke(t);
+            if (baseGenColumnNames != null) {
+                columns = baseGenColumnNames.toString();
             } else {
                 throw new RuntimeException("没有找到有效的实体");
             }
@@ -211,7 +215,7 @@ public class QuerySql<Entity> {
             throw new RuntimeException(e);
         }
         result.append("select ");
-        if (select.length() > 3) {
+        if (selected) {
             result.append(select);
         } else {
             result.append(columns);

@@ -81,6 +81,20 @@ public class UpdateSql<Entity> {
         return this;
     }
 
+    public UpdateSql eq(String column, Object obj) {
+        if (StringUtils.isNotBlank(column) && obj != null) {
+            where.append(" and ");
+            where.append(column);
+            where.append(" = ");
+            if (obj instanceof Integer || obj instanceof Long || obj instanceof Boolean) {
+                where.append(obj);
+            } else {
+                where.append("'" + obj + "'");
+            }
+        }
+        return this;
+    }
+
     public UpdateSql ltEq(String column, Object obj) {
         if (StringUtils.isNotBlank(column) && obj != null) {
             where.append(" and ");

@@ -58,6 +58,7 @@
                 <configuration>
                     <source>11</source>
                     <target>11</target>
+                    <encoding>UTF-8</encoding>
                     <!-- 不添加以下配置编译会报  "程序包 xxx 不可见" -->
                     <compilerArgs>
                         <arg>--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>

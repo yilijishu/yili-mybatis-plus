@@ -152,6 +152,20 @@ public class QuerySql<Entity> {
         return this;
     }
 
+    public QuerySql notEq(String column, Object obj) {
+        if (StringUtils.isNotBlank(column) && obj != null) {
+            where.append(" and ");
+            where.append(column);
+            where.append(" != ");
+            if (obj instanceof Integer || obj instanceof Long || obj instanceof Boolean) {
+                where.append(obj);
+            } else {
+                where.append("'" + obj + "'");
+            }
+        }
+        return this;
+    }
+
     public QuerySql orderByDesc(String column) {
         if (orderBy.length() > 1) {
             orderBy.append(" ,");

@@ -81,6 +81,14 @@ public class BaseManager<T, TB extends BaseMapper<T>> {
         return mapper.deleteById(t, id);
     }
 
+    public Integer deleteByVirtualIds(T t, Collection<?> ids) {
+        return mapper.deleteByVirtualIds(t, ids);
+
+    }
+
+    public Integer deleteByVirtualId(T t, Object id) {
+        return mapper.deleteByVirtualId(t, id);
+    }
 
     public Integer delete(DeleteSql<T> deleteSql) {
         return mapper.delete(deleteSql);

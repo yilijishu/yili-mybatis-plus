@@ -2,9 +2,13 @@ package cn.yili.mybatis.entity;
 
 import lombok.Data;
 
+import java.lang.reflect.Type;
+
 @Data
 public class ComBean {
     private String name;
+
+    private String defTypeColumn;
 
     private boolean column = false;
     private String columValue;
@@ -32,5 +36,13 @@ public class ComBean {
     private String ifFieldConditionName;
 
     private boolean virtualTableId = false;
+
+    private Boolean notNull = false;
+
+    private String columnType;
+
+    private boolean autoModifyTime = false;
+
+    private boolean autoCreateTime = false;
 
 }

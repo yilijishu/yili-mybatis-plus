@@ -2,12 +2,17 @@ cn/yili/mybatis/service/BaseService.class
 cn/yili/mybatis/ann/Column.class
 cn/yili/mybatis/ann/IfFieldCondition.class
 cn/yili/mybatis/wapper/QuerySql.class
+cn/yili/mybatis/ann/ColumnType.class
+cn/yili/mybatis/ann/YiliTableProcessor$2.class
+cn/yili/mybatis/ann/ColumnNotNull.class
 cn/yili/mybatis/ann/OrderBy.class
+cn/yili/mybatis/ann/SetDataBase.class
 cn/yili/mybatis/ann/TableId.class
 cn/yili/mybatis/util/CamelUnderUtil.class
 cn/yili/mybatis/wapper/DeleteSql.class
-cn/yili/mybatis/mapper/BaseMapper$BaseSqlProvider.class
 cn/yili/mybatis/ann/Table.class
+cn/yili/mybatis/build/AutoCreateAction.class
+cn/yili/mybatis/ann/SetDataBase$DataBaseEnum.class
 cn/yili/mybatis/constant/Constant.class
 cn/yili/mybatis/mapper/BaseMapper.class
 cn/yili/mybatis/wapper/UpdateSql.class
@@ -27,3 +32,6 @@ cn/yili/mybatis/entity/Page.class
 cn/yili/mybatis/constant/Constant$Oper.class
 cn/yili/mybatis/constant/Constant$OrderByValue.class
 META-INF/services/javax.annotation.processing.Processor
+cn/yili/mybatis/mapper/provider/BaseSqlProvider.class
+cn/yili/mybatis/ann/AutoCreateTime.class
+cn/yili/mybatis/ann/AutoModifyTime.class

@@ -13,6 +13,11 @@
 |1.0.1|更新scm、git、url信息，添加说明信息|
 |||
 
+## 仓库地址
+|平台|地址|
+|---|---|
+|github|https://github.com/yilijishu/yili-mybatis-plus|
+|gitee|https://gitee.com/yilijishu/yili-mybatis-plus|
 
 ## 一、 MAVEN引用
 ```xml

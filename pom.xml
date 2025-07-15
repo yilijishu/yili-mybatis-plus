@@ -5,23 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>yili-mybatis-plus</artifactId>
     <groupId>com.yilijishu</groupId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
     </properties>
-    <!-- mvn install:install-file
--Dfile=/Users/lmfeng/Documents/msgcenter-sdk-java/target/msgcenter-sdk-1.2.6-SNAPSHOT.jar
--DgroupId=com.souche
--DartifactId=msgcenter-sdk
--Dversion=1.2.6-SNAPSHOT
--Dpackaging=jar
--DlocalRepositoryPath=C:\Users\xxxx\.m2\repository -->
-
 
     <name>Yili MyBatis Plus</name>
     <description>yilijishu mybatis plus plugin</description>
-    <url>https://github.com/example/yili-mybatis-plus</url>
+    <url>https://github.com/yilijishu/yili-mybatis-plus</url>
 
     <licenses>
         <license>
@@ -31,9 +23,9 @@
     </licenses>
 
     <scm>
-        <connection>scm:git:git@github.com:example/yili-mybatis-plus.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com:example/yili-mybatis-plus.git</developerConnection>
-        <url>https://github.com/example/yili-mybatis-plus</url>
+        <connection>scm:git:git@github.com:yilijishu/yili-mybatis-plus.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:yilijishu/yili-mybatis-plus.git</developerConnection>
+        <url>https://github.com/yilijishu/yili-mybatis-plus</url>
     </scm>
 
     <developers>
@@ -130,7 +122,7 @@
                     </execution>
                 </executions>
             </plugin>
-
+        <!-- maven 编译配置 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -149,7 +141,7 @@
                     </compilerArgs>
                 </configuration>
             </plugin>
-
+            <!-- gpg加密签名 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-gpg-plugin</artifactId>

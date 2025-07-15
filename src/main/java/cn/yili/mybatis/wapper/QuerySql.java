@@ -1,6 +1,7 @@
 package cn.yili.mybatis.wapper;
 
 
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -184,9 +185,23 @@ public class QuerySql<Entity> {
         return this;
     }
 
+    @SneakyThrows
     public String toSqlOne() {
         String result = toSql();
-        return result + " limit 1";
+        String database = entityClass.getMethod("baseSqlDatabase").invoke(t).toString();
+        switch (database) {
+            case "ORACLE" : {
+                result += "  FETCH FIRST 1 ROW ONLY ";
+                break;
+            }
+            case "MYSQL" :
+            case "POSTGRESQL" :
+            default : {
+                result += " limit 1";
+                break;
+            }
+        }
+        return result;
     }
 
     public String toSql() {
@@ -248,6 +263,59 @@ public class QuerySql<Entity> {
             result.append(orderBy);
         } else if (StringUtils.isNotBlank(defOrderBy)) {
             result.append(defOrderBy);
+        }
+        return result.toString();
+    }
+
+    public String toSqlCount() {
+        StringBuilder result = new StringBuilder();
+        String table = "";
+        String columns = "";
+        String defWhere = "";
+        String defOrderBy = "";
+        try {
+            Object tableObj = entityClass.getMethod("baseGenTable").invoke(t);
+            if (tableObj != null) {
+                table = tableObj.toString();
+            } else {
+                throw new RuntimeException("没有找到有效的实体");
+            }
+            Object baseGenColumnNames = entityClass.getMethod("baseGenColumnNames").invoke(t);
+            if (baseGenColumnNames != null) {
+                columns = baseGenColumnNames.toString();
+            } else {
+                throw new RuntimeException("没有找到有效的实体");
+            }
+            Object baseGenDefWhere = entityClass.getMethod("baseGenDefWhere").invoke(t);
+            if (baseGenDefWhere != null) {
+                defWhere = baseGenDefWhere.toString();
+            } else {
+                throw new RuntimeException("没有找到有效的实体.");
+            }
+            Object baseGenOrderBy = entityClass.getMethod("baseGenOrderBy").invoke(t);
+            if (baseGenOrderBy != null) {
+                defOrderBy = baseGenOrderBy.toString();
+            } else {
+                throw new RuntimeException("没有找到有效的实体");
+            }
+
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+        result.append("select ");
+        result.append(" count(*) ");
+        result.append(" from ");
+        result.append(table);
+        if (StringUtils.isNotBlank(defWhere)) {
+            result.append(defWhere);
+            result.append(where);
+        } else if (where.length() > 5) {
+            result.append("where ");
+            result.append(where.substring(4));
         }
         return result.toString();
     }

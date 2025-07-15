@@ -1,5 +1,6 @@
 package cn.yili.mybatis.mapper.provider;
 
+import cn.yili.mybatis.entity.Page;
 import cn.yili.mybatis.wapper.DeleteSql;
 import cn.yili.mybatis.wapper.QuerySql;
 import cn.yili.mybatis.wapper.UpdateSql;
@@ -34,6 +35,11 @@ public class BaseSqlProvider {
      *
      */
 
+    /**
+     * 组装创建语句
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String create(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -70,6 +76,12 @@ public class BaseSqlProvider {
         return sbf.toString();
     }
 
+    /**
+     *
+     * 插入语句组装
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String insert(Map<String, Object> map) {
 
@@ -85,7 +97,11 @@ public class BaseSqlProvider {
 
         return sbf.toString();
     }
-
+    /**
+     * 修改语句组装
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String update(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -99,7 +115,11 @@ public class BaseSqlProvider {
 
         return sbf.toString();
     }
-
+    /**
+     * 判断是否不为空修改语句组装
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String updateNotIfNull(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -115,10 +135,9 @@ public class BaseSqlProvider {
     }
 
     /**
-     * insert
-     *
-     * @param map
-     * @return
+     * 批量插入语句组装
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
      */
     @SneakyThrows
     public String insertAll(Map<String, Object> map) {
@@ -148,6 +167,11 @@ public class BaseSqlProvider {
     }
 
     //----基础方法.
+    /**
+     * 查询语句组装
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String select(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -160,11 +184,27 @@ public class BaseSqlProvider {
         sbf.append(obj.getClass().getMethod("baseGenSelectWhere").invoke(obj));
         sbf.append(obj.getClass().getMethod("baseGenOrderBy").invoke(obj));
         if (map.get("page") != null) {
-            sbf.append("        limit ${page.start}, ${page.pageSize}");
+            String database = obj.getClass().getMethod("baseSqlDatabase").invoke(obj).toString();
+            switch (database) {
+                case "MYSQL" :
+                case "POSTGRESQL" : {
+                    sbf.append("        LIMIT ${page.start} OFFSET ${page.pageSize} ");
+                    break;
+                }
+                case "ORACLE" : {
+                    sbf.append("    OFFSET ${page.pageSize} ROWS FETCH NEXT ${page.start} ROWS ONLY ");
+                    break;
+                }
+                default: break;
+            }
         }
         return sbf.toString();
     }
-
+    /**
+     * 获取单条语句组装
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String get(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -176,17 +216,34 @@ public class BaseSqlProvider {
         sbf.append(obj.getClass().getMethod("baseGenDefWhere").invoke(obj));
         sbf.append(obj.getClass().getMethod("baseGenSelectWhere").invoke(obj));
         sbf.append(obj.getClass().getMethod("baseGenOrderBy").invoke(obj));
-        sbf.append(" limit 1");
+
+        String database = obj.getClass().getMethod("baseSqlDatabase").invoke(obj).toString();
+        switch (database) {
+            case "MYSQL" :
+            case "POSTGRESQL" : {
+                sbf.append("  limit 1 ");
+                break;
+            }
+            case "ORACLE" : {
+                sbf.append("  FETCH FIRST 1 ROW ONLY ");
+                break;
+            }
+            default: break;
+        }
 
         return sbf.toString();
     }
-
+    /**
+     * 查询符合条件的语句总条数
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String count(Map<String, Object> map) {
         Object obj = map.get("p");
         StringBuffer sbf = new StringBuffer();
         sbf.append("select ");
-        sbf.append("count(1)");
+        sbf.append("count(*)");
         sbf.append(" from ");
         sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
         sbf.append(obj.getClass().getMethod("baseGenDefWhere").invoke(obj));
@@ -194,7 +251,11 @@ public class BaseSqlProvider {
 
         return sbf.toString();
     }
-
+    /**
+     * 自定义sql查询
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String querySql(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -205,6 +266,40 @@ public class BaseSqlProvider {
         throw new RuntimeException("使用了无效的标准组件");
     }
 
+    /**
+     * 自定义sql查询，分页版本
+     * @param map mybatis 数据参数map
+     * @return 返回sql
+     */
+    @SneakyThrows
+    public String querySqlOfPage(Map<String, Object> map) {
+        Object obj = map.get("p");
+        if (obj instanceof QuerySql) {
+            QuerySql<?> querySql = (QuerySql<?>) obj;
+            String result = querySql.toSql();
+            String database = obj.getClass().getMethod("baseSqlDatabase").invoke(obj).toString();
+            switch (database) {
+                case "ORACLE" : {
+                    result += "    OFFSET ${page.pageSize} ROWS FETCH NEXT ${page.start} ROWS ONLY ";
+                    break;
+                }
+                case "MYSQL" :
+                case "POSTGRESQL" :
+                default: {
+                    result += "        LIMIT ${page.start} OFFSET ${page.pageSize} ";
+                    break;
+                }
+            }
+            return result;
+        }
+        throw new RuntimeException("使用了无效的标准组件");
+    }
+
+    /**
+     * 自定义sql查询 取第一条
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String querySqlOne(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -214,12 +309,21 @@ public class BaseSqlProvider {
         }
         throw new RuntimeException("使用了无效的标准组件");
     }
-
+    /**
+     * 自定义sql修改
+     * @param updateSql  mybatis 数据参数map
+     * @param <T> 泛型类
+     * @return 返回sql
+     */
     @SneakyThrows
     public <T> String updateSql(UpdateSql<T> updateSql) {
         return updateSql.toSql();
     }
-
+    /**
+     * 根据主键ID组装删除语句
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String deleteById(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -248,7 +352,11 @@ public class BaseSqlProvider {
         }
         return sbf.toString();
     }
-
+    /**
+     * 根据虚拟ID组装删除语句
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String deleteByVirtualId(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -277,7 +385,11 @@ public class BaseSqlProvider {
         }
         return sbf.toString();
     }
-
+    /**
+     * 根据虚拟ID组装批量删除语句
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String deleteByVirtualIds(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -307,7 +419,11 @@ public class BaseSqlProvider {
         }
         return sbf.toString();
     }
-
+    /**
+     * 根据主键ID删除语句组装
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     @SneakyThrows
     public String deleteByIds(Map<String, Object> map) {
         Object obj = map.get("p");
@@ -337,7 +453,11 @@ public class BaseSqlProvider {
         }
         return sbf.toString();
     }
-
+    /**
+     * 自定义删除语句
+     * @param map  mybatis 数据参数map
+     * @return 返回sql
+     */
     public String delete(Map<String, Object> map) {
         Object obj = map.get("p");
         if (obj instanceof DeleteSql) {

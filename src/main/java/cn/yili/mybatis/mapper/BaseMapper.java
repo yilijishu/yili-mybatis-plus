@@ -62,6 +62,9 @@ public interface BaseMapper<T> {
     @SelectProvider(method = "querySql", type = BaseSqlProvider.class)
     List<T> querySql(@Param(PARAM_OBJECT) QuerySql<T> querySql);
 
+    @SelectProvider(method = "querySqlOfPage", type = BaseSqlProvider.class)
+    List<T> querySqlOfPage(@Param(PARAM_OBJECT) QuerySql<T> querySql, @Param(PARAM_PAGE) Page page);
+
     @SelectProvider(method = "querySql", type = BaseSqlProvider.class)
     <R> R querySqlResultR(@Param(PARAM_OBJECT) QuerySql<T> querySql);
 

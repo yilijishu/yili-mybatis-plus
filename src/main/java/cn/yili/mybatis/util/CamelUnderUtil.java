@@ -3,7 +3,7 @@ package cn.yili.mybatis.util;
 public class CamelUnderUtil {
     /**
      * 将驼峰式命名的字符串转换为下划线大写方式。如果转换前的驼峰式命名的字符串为空，则返回空字符串。
-     * 例如：HelloWorld->HELLO_WORLD
+     * 例如：HelloWorld 转换成 HELLO_WORLD
      *
      * @param name 转换前的驼峰式命名的字符串
      * @return 转换后下划线大写方式命名的字符串
@@ -35,17 +35,18 @@ public class CamelUnderUtil {
     /**
      * 驼峰
      *
-     * @param name
-     * @return
+     * @param name 名称
+     * @return 驼峰式命名
      */
     public static String camelName(String name) {
         return camelName(name, false);
     }
 
     /**
-     * 将下划线大写方式命名的字符串转换为驼峰式。如果转换前的下划线大写方式命名的字符串为空，则返回空字符串。  * 例如：HELLO_WORLD->HelloWorld
+     * 将下划线大写方式命名的字符串转换为驼峰式。如果转换前的下划线大写方式命名的字符串为空，则返回空字符串。  * 例如：HELLO_WORLD转为HelloWorld
      *
      * @param name 转换前的下划线大写方式命名的字符串
+     * @param firstUpper 首字母是否大写
      * @return 转换后的驼峰式命名的字符串
      */
     public static String camelName(String name, Boolean firstUpper) {

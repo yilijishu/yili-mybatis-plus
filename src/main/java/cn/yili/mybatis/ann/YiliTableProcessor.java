@@ -207,9 +207,9 @@ public class YiliTableProcessor extends AbstractProcessor {
     /**
      * 添加实现接口.
      *
-     * @param jcClassDecl
-     * @param element
-     * @param interfaceClass
+     * @param jcClassDecl 传递class decl
+     * @param element 传递 element
+     * @param interfaceClass 传递interfaceClass
      */
     public void addTnterface(JCTree.JCClassDecl jcClassDecl, Element element, Class<?> interfaceClass) {
         //判断类有没有实现此接口
@@ -475,10 +475,11 @@ public class YiliTableProcessor extends AbstractProcessor {
     /**
      * 加载数据、生成方法.
      *
-     * @param comBeans
-     * @param element
-     * @param table
-     * @return
+     * @param comBeans 传递Combean列表
+     * @param element element对象
+     * @param table 表名
+     * @param comMethod 传递自定义方法
+     * @return 方法定义列表
      */
     public java.util.List<JCTree.JCMethodDecl> buildMethods(java.util.List<ComBean> comBeans, Element element, Table table, ComMethod comMethod) {
         messager.printMessage(Diagnostic.Kind.NOTE, "执行buildMethods" + comBeans + comMethod);
@@ -959,9 +960,9 @@ public class YiliTableProcessor extends AbstractProcessor {
     /**
      * 生成方法（方法名， 步骤）
      *
-     * @param method
-     * @param statements
-     * @return
+     * @param method 要生成的名法名
+     * @param statements 声明代码树列表
+     * @return 返回方法声明
      */
     public JCTree.JCMethodDecl buildMethod(String method, ListBuffer<JCTree.JCStatement> statements) {
         JCTree.JCBlock body = treeMaker.Block(0, statements.toList());
@@ -976,9 +977,9 @@ public class YiliTableProcessor extends AbstractProcessor {
     /**
      * 生成方法（方法名， 字符串）
      *
-     * @param method
-     * @param str
-     * @return
+     * @param method 方法名
+     * @param str 返回的字符串
+     * @return 返回方法声明
      */
     public JCTree.JCMethodDecl buildMethod(String method, String str) {
         ListBuffer<JCTree.JCStatement> statements = new ListBuffer<>();

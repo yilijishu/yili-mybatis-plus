@@ -11,8 +11,23 @@
 |----|----|
 |1.0.0|初版|
 |1.0.1|更新scm、git、url信息，添加说明信息|
-|||
+|1.0.2|更新包名|
+|1.1.0|去掉invoke操作。使用多态模式实现逻辑|
 
+
+## 仓库地址
+|平台|地址|
+|---|---|
+|github|https://github.com/yilijishu/yili-mybatis-plus|
+|gitee|https://gitee.com/yilijishu/yili-mybatis-plus|
+
+## 名词说明
+
+|名词|说明|
+|---|---|
+|id|主键id，唯一，由数据库自增生成|
+|virtualid虚拟ID|虚拟id，唯一，使用@VirtualId标注，由系统生成管理。在修改、删除中 均可作为条件操作|
+|逻辑删除|逻辑删除，是使用@DelTag标记的字段，字段只有是否两种选项，是标识为删除，否标识为未删除|
 
 ## 一、 MAVEN引用
 ```xml
@@ -301,5 +316,73 @@ private Long id;
 @VirtualTableId
 private Long userId;
 ````
+### 17、 @DelTag
+``
+注解@DelTag 设定删除表示，主要用于逻辑删除。
+``
+
+```java
+//DEMO 设定删除标记
+@DelTag("true")
+private Boolean delTag;
+```
 
 
+## 五、 统一接口标准
+``
+以下是统一标准的使用说明。专为标准化输出使用
+``
+### 1、 标准接口描述
+``
+如果使用标准接口 请继承StandardWeb类。基础路径为/{packageName}/{entityName}/{operate}
+子类设定好基础路径。/{sub-class-project} 最终路径为：/{sub-class-project}/{packageName}/{entityName}/{operate}
+接口根据operate不同，传递的参数也不相同。
+``
+### 2、 接口URL
+```
+POST URL: /{sub-class-project}/{packageName}/{entityName}/{operate}
+```
+``
+以下路径说明 按照实体类com.yilijishu.UserMember举例说明
+``
+
+|路径参数|说明|
+|---|---|
+|sub-class-project|继承StandardWeb的子类指定的路径|
+|packageName|操作哪个entity 请把包路径用-替换，packageName传递com-yilijishu|
+|entityName|实体类名称，驼峰结构使用-转换 ， entityName传递user-member|
+|operate|操作，主要有以下几种： save：保存， d-save：批量插入，unn：指定修改 ，u：全修改 ，d：删除，dd-id：根据ID批量删除，dd-vid：根据虚拟ID批量删除， ddv-id：根据ID批量逻辑删除，ddv-vid：根据虚拟ID批量逻辑删除， q：查询 ， g：获取单条数据 ， qp：分页查询 |
+
+### 3、 参数说明
+
+``
+以下为常态传递的参数
+``
+
+|operate值|传递方式|类型|说明|参数说明|
+|---|---|---|---|---|
+|packageName|path|string|解析路径所得|格式为Entity的包名，转换成格式所示：com.yilijishu --> com-yilijishu|
+|entityName|path|string|解析路径所得|格为Entity的类名，转换成格式所示：UserMember --> user-member|
+|operate|path|string|操作：增删改查|参数说明在下方详细说明|
+|start|param|int|页数|分页，开始页数 例如第一页传递 1， 只有operate为分页查询时有效|
+|size|param|int|每页数|分页，每页数量， 例如每页显示20条，传递 20，只有operate为分页查询时有效|
+|body|request body|string|消息体|根据operate不同传递不同。在下方详细说明|
+
+``
+不同的operate，body参数传递的也不相同，以下是body说明
+``
+
+|operate值|说明|body消息体传递|
+|---|---|---|
+|save|插入数据|json.toJsonString(entity), 例如: "{\"age\":10,\"name\":\"上帝\"}"|
+|d-save|批量插入|json.toJsonString(list<entity>), 例如: "[{\"age\":10,\"name\":\"上帝\"}]"|
+|unn|指定修改,会根据是否为空进行修改，不为空则修改|json.toJsonString(entity), 例如: "{\"id\":1, \"age\":10,\"name\":\"上帝\"}"|
+|u|全修改，无论是否为空，均修改|json.toJsonString(entity),例如: "{\"id\":1, \"age\":10,\"name\":\"上帝\"}"|
+|d|删除，可以传递条件或者id、虚拟ID|json.toJsonString(entity),例如: "{\"id\":1}"|
+|dd-id|根据ID批量删除|json.toJsonString(list), 例如："[1,2,3]"|
+|dd-vid|根据虚拟ID批量删除|json.toJsonString(list), 例如："[1,2,3]"|
+|ddv-id|根据ID批量逻辑删除|json.toJsonString(list), 例如："[1,2,3]"|
+|ddv-vid|根据虚拟ID批量逻辑删除|json.toJsonString(list), 例如："[1,2,3]"|
+|q|查询，给定条件查询，不传递则查询全部|json.toJsonString(entity), 例如: "{\"age\":10,\"name\":\"上帝\"}"|
+|g|获取单条数据，给定条件获取,当出现多条数据时，返回第一条|json.toJsonString(entity), 例如: "{\"age\":10,\"name\":\"上帝\"}"|
+|qp|分页查询，给定条件查询|json.toJsonString(entity), 例如: "{\"age\":10,\"name\":\"上帝\"}",同时传递start，和size 参数|

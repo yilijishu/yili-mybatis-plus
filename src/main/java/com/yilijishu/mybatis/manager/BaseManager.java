@@ -56,6 +56,10 @@ public class BaseManager<T, TB extends BaseMapper<T>> {
         return mapper.querySql(querySql);
     }
 
+    public List<T> querySqlOfPage(QuerySql<T> querySql, Page page) {
+        return mapper.querySqlOfPage(querySql, page);
+    }
+
     public <R> R querySqlResultR(QuerySql<T> querySql) {
         return mapper.querySqlResultR(querySql);
     }
@@ -72,26 +76,25 @@ public class BaseManager<T, TB extends BaseMapper<T>> {
         return mapper.updateSql(updateSql);
     }
 
+    public Integer delete(T t) {
+        return mapper.delete(t);
+    }
+
     public Integer deleteByIds(T t, Collection<?> ids) {
         return mapper.deleteByIds(t, ids);
 
     }
 
-    public Integer deleteById(T t, Object id) {
-        return mapper.deleteById(t, id);
-    }
+
 
     public Integer deleteByVirtualIds(T t, Collection<?> ids) {
         return mapper.deleteByVirtualIds(t, ids);
 
     }
 
-    public Integer deleteByVirtualId(T t, Object id) {
-        return mapper.deleteByVirtualId(t, id);
-    }
 
-    public Integer delete(DeleteSql<T> deleteSql) {
-        return mapper.delete(deleteSql);
+    public Integer deleteSql(DeleteSql<T> deleteSql) {
+        return mapper.deleteSql(deleteSql);
     }
 
 

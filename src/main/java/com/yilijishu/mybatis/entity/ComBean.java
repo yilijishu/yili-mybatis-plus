@@ -45,4 +45,9 @@ public class ComBean {
 
     private boolean autoCreateTime = false;
 
+
+    private boolean delTag = false;
+
+    private String delTagValue;
+
 }

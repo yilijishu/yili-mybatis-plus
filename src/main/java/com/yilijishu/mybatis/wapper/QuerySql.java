@@ -1,10 +1,10 @@
 package com.yilijishu.mybatis.wapper;
 
 
-import lombok.SneakyThrows;
+import com.yilijishu.mybatis.iter.BaseBeanInterface;
+import com.yilijishu.utils.exceptions.BizException;
 import org.apache.commons.lang3.StringUtils;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 public class QuerySql<Entity> {
@@ -17,13 +17,16 @@ public class QuerySql<Entity> {
 
     private Entity t;
 
-    private Class<?> entityClass;
+    private BaseBeanInterface bbi;
 
     private boolean selected = false;
 
     public QuerySql(Entity t) {
         this.t = t;
-        entityClass = t.getClass();
+        if (!(t instanceof BaseBeanInterface)) {
+            throw new BizException("无效的实体");
+        }
+        this.bbi = (BaseBeanInterface) t;
         this.select = new StringBuilder();
         this.where = new StringBuilder();
         this.orderBy = new StringBuilder();
@@ -185,18 +188,17 @@ public class QuerySql<Entity> {
         return this;
     }
 
-    @SneakyThrows
     public String toSqlOne() {
         String result = toSql();
-        String database = entityClass.getMethod("baseSqlDatabase").invoke(t).toString();
+        String database = bbi.baseSqlDatabase();
         switch (database) {
-            case "ORACLE" : {
+            case "ORACLE": {
                 result += "  FETCH FIRST 1 ROW ONLY ";
                 break;
             }
-            case "MYSQL" :
-            case "POSTGRESQL" :
-            default : {
+            case "MYSQL":
+            case "POSTGRESQL":
+            default: {
                 result += " limit 1";
                 break;
             }
@@ -210,39 +212,31 @@ public class QuerySql<Entity> {
         String columns = "";
         String defWhere = "";
         String defOrderBy = "";
-        try {
-            Object tableObj = entityClass.getMethod("baseGenTable").invoke(t);
-            if (tableObj != null) {
-                table = tableObj.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体");
-            }
-            Object baseGenColumnNames = entityClass.getMethod("baseGenColumnNames").invoke(t);
-            if (baseGenColumnNames != null) {
-                columns = baseGenColumnNames.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体");
-            }
-            Object baseGenDefWhere = entityClass.getMethod("baseGenDefWhere").invoke(t);
-            if (baseGenDefWhere != null) {
-                defWhere = baseGenDefWhere.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体.");
-            }
-            Object baseGenOrderBy = entityClass.getMethod("baseGenOrderBy").invoke(t);
-            if (baseGenOrderBy != null) {
-                defOrderBy = baseGenOrderBy.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体");
-            }
-
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+        Object tableObj = bbi.baseGenTable();
+        if (tableObj != null) {
+            table = tableObj.toString();
+        } else {
+            throw new RuntimeException("没有找到有效的实体");
         }
+        Object baseGenColumnNames = bbi.baseGenColumnNames();
+        if (baseGenColumnNames != null) {
+            columns = baseGenColumnNames.toString();
+        } else {
+            throw new RuntimeException("没有找到有效的实体");
+        }
+        Object baseGenDefWhere = bbi.baseGenDefWhere();
+        if (baseGenDefWhere != null) {
+            defWhere = baseGenDefWhere.toString();
+        } else {
+            throw new RuntimeException("没有找到有效的实体.");
+        }
+        Object baseGenOrderBy = bbi.baseGenOrderBy();
+        if (baseGenOrderBy != null) {
+            defOrderBy = baseGenOrderBy.toString();
+        } else {
+            throw new RuntimeException("没有找到有效的实体");
+        }
+
         result.append("select ");
         if (selected) {
             result.append(select);
@@ -273,38 +267,29 @@ public class QuerySql<Entity> {
         String columns = "";
         String defWhere = "";
         String defOrderBy = "";
-        try {
-            Object tableObj = entityClass.getMethod("baseGenTable").invoke(t);
-            if (tableObj != null) {
-                table = tableObj.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体");
-            }
-            Object baseGenColumnNames = entityClass.getMethod("baseGenColumnNames").invoke(t);
-            if (baseGenColumnNames != null) {
-                columns = baseGenColumnNames.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体");
-            }
-            Object baseGenDefWhere = entityClass.getMethod("baseGenDefWhere").invoke(t);
-            if (baseGenDefWhere != null) {
-                defWhere = baseGenDefWhere.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体.");
-            }
-            Object baseGenOrderBy = entityClass.getMethod("baseGenOrderBy").invoke(t);
-            if (baseGenOrderBy != null) {
-                defOrderBy = baseGenOrderBy.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体");
-            }
-
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+        Object tableObj = bbi.baseGenTable();
+        if (tableObj != null) {
+            table = tableObj.toString();
+        } else {
+            throw new RuntimeException("没有找到有效的实体");
+        }
+        Object baseGenColumnNames = bbi.baseGenColumnNames();
+        if (baseGenColumnNames != null) {
+            columns = baseGenColumnNames.toString();
+        } else {
+            throw new RuntimeException("没有找到有效的实体");
+        }
+        Object baseGenDefWhere = bbi.baseGenDefWhere();
+        if (baseGenDefWhere != null) {
+            defWhere = baseGenDefWhere.toString();
+        } else {
+            throw new RuntimeException("没有找到有效的实体.");
+        }
+        Object baseGenOrderBy = bbi.baseGenOrderBy();
+        if (baseGenOrderBy != null) {
+            defOrderBy = baseGenOrderBy.toString();
+        } else {
+            throw new RuntimeException("没有找到有效的实体");
         }
         result.append("select ");
         result.append(" count(*) ");

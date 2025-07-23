@@ -1,9 +1,10 @@
 package com.yilijishu.mybatis.wapper;
 
 
+import com.yilijishu.mybatis.iter.BaseBeanInterface;
+import com.yilijishu.utils.exceptions.BizException;
 import org.apache.commons.lang3.StringUtils;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 public class UpdateSql<Entity> {
@@ -14,13 +15,16 @@ public class UpdateSql<Entity> {
 
     private StringBuilder orderBy = null;
 
-    private Entity t;
+    private BaseBeanInterface bbi;
 
-    private Class<?> entityClass;
+    private Entity t;
 
     public UpdateSql(Entity t) {
         this.t = t;
-        entityClass = t.getClass();
+        if (!(t instanceof BaseBeanInterface)) {
+            throw new BizException("无效的实体");
+        }
+        this.bbi = (BaseBeanInterface) t;
         this.set = new StringBuilder();
         this.where = new StringBuilder();
         this.orderBy = new StringBuilder();
@@ -171,21 +175,12 @@ public class UpdateSql<Entity> {
     public String toSql() {
         StringBuilder result = new StringBuilder();
         String table = "";
-        try {
-            Object tableObj = entityClass.getMethod("baseGenTable").invoke(t);
-            if (tableObj != null) {
-                table = tableObj.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体");
-            }
 
-
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+        Object tableObj = bbi.baseGenTable();
+        if (tableObj != null) {
+            table = tableObj.toString();
+        } else {
+            throw new RuntimeException("没有找到有效的实体");
         }
         result.append(" update ");
         result.append(table);

@@ -1,9 +1,10 @@
 package com.yilijishu.mybatis.wapper;
 
 
+import com.yilijishu.mybatis.iter.BaseBeanInterface;
+import com.yilijishu.utils.exceptions.BizException;
 import org.apache.commons.lang3.StringUtils;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 public class DeleteSql<Entity> {
@@ -12,11 +13,14 @@ public class DeleteSql<Entity> {
 
     private Entity t;
 
-    private Class<?> entityClass;
+    private BaseBeanInterface bbi;
 
     public DeleteSql(Entity t) {
         this.t = t;
-        entityClass = t.getClass();
+        if (!(t instanceof BaseBeanInterface)) {
+            throw new BizException("无效的实体");
+        }
+        this.bbi = (BaseBeanInterface) t;
         this.where = new StringBuilder();
     }
 
@@ -144,73 +148,16 @@ public class DeleteSql<Entity> {
         return this;
     }
 
-//    public String toIdsSql(Collection collection) {
-//        StringBuilder result = new StringBuilder();
-//        Class cls = entity.getClass();
-//        String id = "";
-//        String table = "";
-//        try {
-//            Object tableObj = cls.getMethod("baseGenTable").invoke(entity);
-//            if (tableObj != null) {
-//                table = tableObj.toString();
-//            } else {
-//                throw new RuntimeException("没有找到有效的实体");
-//            }
-//
-//            Object baseGenId = cls.getMethod("baseGenId").invoke(entity);
-//            if (baseGenId != null) {
-//                id = baseGenId.toString();
-//            } else {
-//                throw new RuntimeException("没有找到有效的实体");
-//            }
-//        } catch (NoSuchMethodException e) {
-//            throw new RuntimeException(e);
-//        } catch (InvocationTargetException e) {
-//            throw new RuntimeException(e);
-//        } catch (IllegalAccessException e) {
-//            throw new RuntimeException(e);
-//        }
-//        result.append(" delete from ");
-//        result.append(table);
-//        if(collection != null && collection.size() > 0) {
-//            result.append(" where ");
-//            result.append(id);
-//            result.append(" in ( ");
-//            collection.forEach(e->{
-//                if(e instanceof Integer || e instanceof Long) {
-//                    result.append(e);
-//                } else {
-//                    result.append("'");
-//                    result.append(e);
-//                    result.append("'");
-//                }
-//            });
-//            result.append(" ) ");
-//        } else {
-//            throw new RuntimeException("没有条件语句");
-//        }
-//
-//        return result.toString();
-//    }
-
     public String toSql() {
         StringBuilder result = new StringBuilder();
         String table = "";
-        try {
-            Object tableObj = entityClass.getMethod("baseGenTable").invoke(t);
-            if (tableObj != null) {
-                table = tableObj.toString();
-            } else {
-                throw new RuntimeException("没有找到有效的实体");
-            }
 
 
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        } catch (InvocationTargetException e) {
-            throw new RuntimeException(e);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
+        Object tableObj = bbi.baseGenTable();
+        if (tableObj != null) {
+            table = tableObj.toString();
+        } else {
+            throw new RuntimeException("没有找到有效的实体");
         }
         result.append(" delete from ");
         result.append(table);

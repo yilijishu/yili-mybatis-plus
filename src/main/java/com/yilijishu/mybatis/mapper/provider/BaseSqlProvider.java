@@ -1,8 +1,10 @@
 package com.yilijishu.mybatis.mapper.provider;
 
+import com.yilijishu.mybatis.iter.BaseBeanInterface;
 import com.yilijishu.mybatis.wapper.DeleteSql;
 import com.yilijishu.mybatis.wapper.QuerySql;
 import com.yilijishu.mybatis.wapper.UpdateSql;
+import com.yilijishu.utils.exceptions.BizException;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 
@@ -16,8 +18,6 @@ public class BaseSqlProvider {
     /**
      * baseGenTable  生成的表名  table_name
      * baseGenColumnNames 生成的全部列名 逗号分割  base_1, base_2
-     * baseGenNames  生成的全部列名     废弃
-     * baseGenListNames  生成的列表名称   废弃
      * baseGenInertColumnNames  生成的插入列名 逗号分割 base_1, base_2
      * baseGenInsertNames   生成的插入Name 逗号分隔   base1, base2
      * baseGenInsertListNames   生成的插入列表Name  逗号分隔 list[0,1,2].name
@@ -29,8 +29,11 @@ public class BaseSqlProvider {
      * baseGenUpdateWhere  生成的修改where条件
      * baseGenOrderBy  生成的order by
      * baseSqlDatabase 生成的database 如：MYSQL ORACLE POSTGRESQL
-     * baseCreateTable 生成的创建Table脚本
-     *
+     * baseCreateTable 生成的创建Table脚本 create table xxx ();
+     * baseGenVirtualId 生成的虚拟ID，列名
+     * genDelTag 生成逻辑删除位 true false
+     * genDelTagColumn 生成逻辑删除属性 base_1
+     * genDelTagValue 生成删除标记值 1
      *
      */
 
@@ -43,8 +46,12 @@ public class BaseSqlProvider {
     public String create(Map<String, Object> map) {
         Object obj = map.get("p");
         StringBuffer sbf = new StringBuffer();
-        String table = obj.getClass().getMethod("baseGenTable").invoke(obj).toString();
-        String database = obj.getClass().getMethod("baseSqlDatabase").invoke(obj).toString();
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
+        }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
+        String table = bbi.baseGenTable();
+        String database = bbi.baseSqlDatabase();
         sbf.append("create table ");
         switch (database) {
             case "MYSQL" :
@@ -54,9 +61,9 @@ public class BaseSqlProvider {
             }
             default: break;
         }
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
+        sbf.append(table);
         sbf.append(" (");
-        sbf.append(obj.getClass().getMethod("baseCreateTable").invoke(obj));
+        sbf.append(bbi.baseCreateTable());
         sbf.append(" ); ");
         switch (database) {
             case "ORACLE": {
@@ -65,7 +72,7 @@ public class BaseSqlProvider {
                         "BEFORE INSERT ON "+table+"\n" +
                         "FOR EACH ROW\n" +
                         "BEGIN\n" +
-                        "    SELECT " + table + "_seq.NEXTVAL INTO :NEW." + obj.getClass().getMethod("baseGenId").invoke(obj).toString() +" FROM dual;\n" +
+                        "    SELECT " + table + "_seq.NEXTVAL INTO :NEW." + bbi.baseGenId() +" FROM dual;\n" +
                         "END;");
                 break;
             }
@@ -87,11 +94,15 @@ public class BaseSqlProvider {
         Object obj = map.get("p");
         StringBuffer sbf = new StringBuffer();
         sbf.append("insert into ");
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
+        }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
+        sbf.append(bbi.baseGenTable());
         sbf.append(" (");
-        sbf.append(obj.getClass().getMethod("baseGenInertColumnNames").invoke(obj));
+        sbf.append(bbi.baseGenInertColumnNames());
         sbf.append(") values (");
-        sbf.append(obj.getClass().getMethod("baseGenInsertNames").invoke(obj));
+        sbf.append(bbi.baseGenInsertNames());
         sbf.append(")");
 
         return sbf.toString();
@@ -105,12 +116,16 @@ public class BaseSqlProvider {
     public String update(Map<String, Object> map) {
         Object obj = map.get("p");
         StringBuffer sbf = new StringBuffer();
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
+        }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
         sbf.append("update ");
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
+        sbf.append(bbi.baseGenTable());
         sbf.append(" set ");
-        sbf.append(obj.getClass().getMethod("baseGenUpdateSet").invoke(obj));
+        sbf.append(bbi.baseGenUpdateSet());
         sbf.append(" where ");
-        sbf.append(obj.getClass().getMethod("baseGenUpdateWhere").invoke(obj));
+        sbf.append(bbi.baseGenUpdateWhere());
 
         return sbf.toString();
     }
@@ -123,12 +138,16 @@ public class BaseSqlProvider {
     public String updateNotIfNull(Map<String, Object> map) {
         Object obj = map.get("p");
         StringBuffer sbf = new StringBuffer();
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
+        }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
         sbf.append("update ");
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
+        sbf.append(bbi.baseGenTable());
         sbf.append(" set ");
-        sbf.append(obj.getClass().getMethod("baseGenUpdateAllSet").invoke(obj));
+        sbf.append(bbi.baseGenUpdateAllSet());
         sbf.append(" where ");
-        sbf.append(obj.getClass().getMethod("baseGenUpdateWhere").invoke(obj));
+        sbf.append(bbi.baseGenUpdateWhere());
 
         return sbf.toString();
     }
@@ -146,12 +165,16 @@ public class BaseSqlProvider {
             List<?> list = (List<?>) obj2;
             if (list != null && list.size() > 0) {
                 Object obj = list.get(0);
+                if(!(obj instanceof BaseBeanInterface)){
+                    throw new BizException("无效的实体");
+                }
+                BaseBeanInterface bbi = (BaseBeanInterface) obj;
                 sbf.append("insert into ");
-                sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
+                sbf.append(bbi.baseGenTable());
                 sbf.append(" (");
-                sbf.append(obj.getClass().getMethod("baseGenInertColumnNames").invoke(obj));
+                sbf.append(bbi.baseGenInertColumnNames());
                 sbf.append(") values ");
-                MessageFormat messageFormat = new MessageFormat((String) obj.getClass().getMethod("baseGenInsertListNames").invoke(obj));
+                MessageFormat messageFormat = new MessageFormat(bbi.baseGenInsertListNames());
                 for (int i = 0; i < list.size(); i++) {
                     sbf.append("(");
                     sbf.append(messageFormat.format(new Object[]{i}));
@@ -175,15 +198,19 @@ public class BaseSqlProvider {
     public String select(Map<String, Object> map) {
         Object obj = map.get("p");
         StringBuffer sbf = new StringBuffer();
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
+        }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
         sbf.append("select ");
-        sbf.append(obj.getClass().getMethod("baseGenColumnNames").invoke(obj));
+        sbf.append(bbi.baseGenColumnNames());
         sbf.append(" from ");
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
-        sbf.append(obj.getClass().getMethod("baseGenDefWhere").invoke(obj));
-        sbf.append(obj.getClass().getMethod("baseGenSelectWhere").invoke(obj));
-        sbf.append(obj.getClass().getMethod("baseGenOrderBy").invoke(obj));
+        sbf.append(bbi.baseGenTable());
+        sbf.append(bbi.baseGenDefWhere());
+        sbf.append(bbi.baseGenSelectWhere());
+        sbf.append(bbi.baseGenOrderBy());
         if (map.get("page") != null) {
-            String database = obj.getClass().getMethod("baseSqlDatabase").invoke(obj).toString();
+            String database = bbi.baseSqlDatabase();
             switch (database) {
                 case "MYSQL" :
                 case "POSTGRESQL" : {
@@ -208,15 +235,19 @@ public class BaseSqlProvider {
     public String get(Map<String, Object> map) {
         Object obj = map.get("p");
         StringBuffer sbf = new StringBuffer();
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
+        }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
         sbf.append("select ");
-        sbf.append(obj.getClass().getMethod("baseGenColumnNames").invoke(obj));
+        sbf.append(bbi.baseGenColumnNames());
         sbf.append(" from ");
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
-        sbf.append(obj.getClass().getMethod("baseGenDefWhere").invoke(obj));
-        sbf.append(obj.getClass().getMethod("baseGenSelectWhere").invoke(obj));
-        sbf.append(obj.getClass().getMethod("baseGenOrderBy").invoke(obj));
+        sbf.append(bbi.baseGenTable());
+        sbf.append(bbi.baseGenDefWhere());
+        sbf.append(bbi.baseGenSelectWhere());
+        sbf.append(bbi.baseGenOrderBy());
 
-        String database = obj.getClass().getMethod("baseSqlDatabase").invoke(obj).toString();
+        String database = bbi.baseSqlDatabase();
         switch (database) {
             case "MYSQL" :
             case "POSTGRESQL" : {
@@ -241,12 +272,16 @@ public class BaseSqlProvider {
     public String count(Map<String, Object> map) {
         Object obj = map.get("p");
         StringBuffer sbf = new StringBuffer();
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
+        }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
         sbf.append("select ");
         sbf.append("count(*)");
         sbf.append(" from ");
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
-        sbf.append(obj.getClass().getMethod("baseGenDefWhere").invoke(obj));
-        sbf.append(obj.getClass().getMethod("baseGenSelectWhere").invoke(obj));
+        sbf.append(bbi.baseGenTable());
+        sbf.append(bbi.baseGenDefWhere());
+        sbf.append(bbi.baseGenSelectWhere());
 
         return sbf.toString();
     }
@@ -273,10 +308,14 @@ public class BaseSqlProvider {
     @SneakyThrows
     public String querySqlOfPage(Map<String, Object> map) {
         Object obj = map.get("p");
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
+        }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
         if (obj instanceof QuerySql) {
             QuerySql<?> querySql = (QuerySql<?>) obj;
             String result = querySql.toSql();
-            String database = obj.getClass().getMethod("baseSqlDatabase").invoke(obj).toString();
+            String database = bbi.baseSqlDatabase();
             switch (database) {
                 case "ORACLE" : {
                     result += "    OFFSET ${page.pageSize} ROWS FETCH NEXT ${page.start} ROWS ONLY ";
@@ -324,66 +363,20 @@ public class BaseSqlProvider {
      * @return 返回sql
      */
     @SneakyThrows
-    public String deleteById(Map<String, Object> map) {
+    public String delete(Map<String, Object> map) {
         Object obj = map.get("p");
-        StringBuilder sbf = new StringBuilder();
-        Object o = map.get("id");
-        sbf.append("delete from ");
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
-        sbf.append(" where ");
-        String str = (String) obj.getClass().getMethod("baseGenId").invoke(obj);
-        if (StringUtils.isNotBlank(str)) {
-            sbf.append(str);
-            sbf.append(" = ");
-            if (o != null) {
-
-                if (o instanceof Integer || o instanceof Long) {
-                    sbf.append(o);
-                } else {
-                    sbf.append("'");
-                    sbf.append(o);
-                    sbf.append("'");
-                }
-
-            }
-        } else {
-            throw new RuntimeException("没有定义主键");
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
         }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
+        StringBuilder sbf = new StringBuilder();
+        sbf.append("delete from ");
+        sbf.append(bbi.baseGenTable());
+        sbf.append(bbi.baseGenDefWhere());
+        sbf.append(bbi.baseGenSelectWhere());
         return sbf.toString();
     }
-    /**
-     * 根据虚拟ID组装删除语句
-     * @param map  mybatis 数据参数map
-     * @return 返回sql
-     */
-    @SneakyThrows
-    public String deleteByVirtualId(Map<String, Object> map) {
-        Object obj = map.get("p");
-        StringBuilder sbf = new StringBuilder();
-        Object o = map.get("id");
-        sbf.append("delete from ");
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
-        sbf.append(" where ");
-        String str = (String) obj.getClass().getMethod("baseGenVirtualId").invoke(obj);
-        if (StringUtils.isNotBlank(str)) {
-            sbf.append(str);
-            sbf.append(" = ");
-            if (o != null) {
 
-                if (o instanceof Integer || o instanceof Long) {
-                    sbf.append(o);
-                } else {
-                    sbf.append("'");
-                    sbf.append(o);
-                    sbf.append("'");
-                }
-
-            }
-        } else {
-            throw new RuntimeException("没有定义主键");
-        }
-        return sbf.toString();
-    }
     /**
      * 根据虚拟ID组装批量删除语句
      * @param map  mybatis 数据参数map
@@ -392,12 +385,16 @@ public class BaseSqlProvider {
     @SneakyThrows
     public String deleteByVirtualIds(Map<String, Object> map) {
         Object obj = map.get("p");
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
+        }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
         StringBuilder sbf = new StringBuilder();
         Collection<?> collection = (Collection<?>) map.get("ids");
         sbf.append("delete from ");
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
+        sbf.append(bbi.baseGenTable());
         sbf.append(" where ");
-        String str = (String) obj.getClass().getMethod("baseGenVirtualId").invoke(obj);
+        String str = bbi.baseGenVirtualId();
         if (StringUtils.isNotBlank(str)) {
             sbf.append(str);
             sbf.append(" in (");
@@ -426,12 +423,16 @@ public class BaseSqlProvider {
     @SneakyThrows
     public String deleteByIds(Map<String, Object> map) {
         Object obj = map.get("p");
+        if(!(obj instanceof BaseBeanInterface)){
+            throw new BizException("无效的实体");
+        }
+        BaseBeanInterface bbi = (BaseBeanInterface) obj;
         StringBuilder sbf = new StringBuilder();
         Collection<?> collection = (Collection<?>) map.get("ids");
         sbf.append("delete from ");
-        sbf.append(obj.getClass().getMethod("baseGenTable").invoke(obj));
+        sbf.append(bbi.baseGenTable());
         sbf.append(" where ");
-        String str = (String) obj.getClass().getMethod("baseGenId").invoke(obj);
+        String str = bbi.baseGenId();
         if (StringUtils.isNotBlank(str)) {
             sbf.append(str);
             sbf.append(" in (");
@@ -457,7 +458,7 @@ public class BaseSqlProvider {
      * @param map  mybatis 数据参数map
      * @return 返回sql
      */
-    public String delete(Map<String, Object> map) {
+    public String deleteSql(Map<String, Object> map) {
         Object obj = map.get("p");
         if (obj instanceof DeleteSql) {
             DeleteSql<?> deleteSql = (DeleteSql<?>) obj;

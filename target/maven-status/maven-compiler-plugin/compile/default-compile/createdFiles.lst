@@ -6,6 +6,7 @@ com/yilijishu/mybatis/ann/IfFieldCondition.class
 com/yilijishu/mybatis/ann/OrderBy.class
 com/yilijishu/mybatis/ann/YiliTableProcessor$1.class
 com/yilijishu/mybatis/entity/ComBean.class
+com/yilijishu/mybatis/service/impl/BaseServiceImpl.class
 com/yilijishu/mybatis/ann/SetDataBase$DataBaseEnum.class
 com/yilijishu/mybatis/package-info.class
 com/yilijishu/mybatis/ann/AddSelectCondition.class
@@ -26,6 +27,7 @@ com/yilijishu/mybatis/mapper/provider/BaseSqlProvider.class
 com/yilijishu/mybatis/ann/AutoModifyTime.class
 com/yilijishu/mybatis/ann/Column.class
 com/yilijishu/mybatis/ann/OverrideOrderBy.class
+com/yilijishu/mybatis/ann/DelTag.class
 com/yilijishu/mybatis/ann/Table.class
 com/yilijishu/mybatis/ann/AutoCreateTime.class
 com/yilijishu/mybatis/constant/Constant$Oper.class
@@ -35,4 +37,3 @@ com/yilijishu/mybatis/ann/IgnoreInsertColumn.class
 com/yilijishu/mybatis/ann/ColumnType.class
 com/yilijishu/mybatis/constant/Constant$OrderByValue.class
 META-INF/services/javax.annotation.processing.Processor
-com/yilijishu/mybatis/util/CamelUnderUtil.class

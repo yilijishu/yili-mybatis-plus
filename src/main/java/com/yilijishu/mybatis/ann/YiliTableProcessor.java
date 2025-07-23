@@ -1,23 +1,17 @@
 package com.yilijishu.mybatis.ann;
 
 
+import com.sun.tools.javac.code.*;
+import com.sun.tools.javac.util.*;
 import com.yilijishu.mybatis.entity.ComBean;
 import com.yilijishu.mybatis.entity.ComMethod;
-import com.yilijishu.mybatis.util.CamelUnderUtil;
 import com.google.auto.service.AutoService;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTrees;
-import com.sun.tools.javac.code.Attribute;
-import com.sun.tools.javac.code.Flags;
-import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.TypeTag;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
-import com.sun.tools.javac.util.List;
-import com.sun.tools.javac.util.ListBuffer;
-import com.sun.tools.javac.util.Names;
-import com.sun.tools.javac.util.Pair;
+import com.yilijishu.utils.CamelUnderUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +38,10 @@ public class YiliTableProcessor extends AbstractProcessor {
     private com.sun.tools.javac.tree.TreeMaker treeMaker;
     private com.sun.tools.javac.util.Names names;
     private Class<?> supClass;
+
+    private com.sun.tools.javac.code.Symtab symtab;
+
+    private Types types;
 
     private static SetDataBase.DataBaseEnum DataBase = SetDataBase.DataBaseEnum.MYSQL;
 
@@ -76,6 +74,8 @@ public class YiliTableProcessor extends AbstractProcessor {
         com.sun.tools.javac.util.Context context = ((com.sun.tools.javac.processing.JavacProcessingEnvironment) processingEnv).getContext();
         this.treeMaker = TreeMaker.instance(context);
         this.names = Names.instance(context);
+        this.symtab = Symtab.instance(context);
+        this.types = Types.instance(context);
     }
 
     @Override
@@ -127,18 +127,59 @@ public class YiliTableProcessor extends AbstractProcessor {
                                     jcClassDecl.defs = jcClassDecl.defs.append(printMethod);
                                 }
                             }
+//                            JCTree.JCExpression interfaceType = treeMaker.Ident(names.fromString("com.yilijishu.mybatis.iter.BaseBeanInterface"));
+//                            List<JCTree.JCExpression> implementing = jcClassDecl.getImplementsClause().prepend(interfaceType);
+//                            JCTree.JCClassDecl modifiedClass = treeMaker.ClassDef(
+//                                    jcClassDecl.getModifiers(),
+//                                    jcClassDecl.getSimpleName(),
+//                                    jcClassDecl.getTypeParameters(),
+//                                    jcClassDecl.getExtendsClause(),
+//                                    implementing,
+//                                    jcClassDecl.getMembers()
+//                            );
+
+                            JCTree.JCExpression qualIdent = createQualIdent("com.yilijishu.mybatis.iter.BaseBeanInterface", treeMaker, names);
+//                            List<JCTree.JCExpression> implementing = jcClassDecl.getImplementsClause();
+//                            implementing = implementing.append(qualIdent);
+                            jcClassDecl.implementing = jcClassDecl.implementing.append(qualIdent);
+
 //
-//                            jcClassDecl.implementing = jcClassDecl.implementing.append(treeMaker.Ident(names.fromString("cn.yili.mybatis.iter.BaseBeanInterface")));
+//                            jcClassDecl.implementing = jcClassDecl.implementing.append(treeMaker.Ident(names.fromString("com.yilijishu.mybatis.iter.BaseBeanInterface")));
                             //addTnterface(jcClassDecl, element, BaseBeanInterface.class);
                             super.visitClassDef(jcClassDecl);
                         }
                     });
+
                 }
             }
         } else {
             messager.printMessage(Diagnostic.Kind.NOTE, "失败：" + set);
         }
         return true;
+    }
+
+    private JCTree.JCExpression createQualIdent(String qualifiedName, TreeMaker treeMaker, Names names) {
+        int lastDotIndex = qualifiedName.lastIndexOf('.');
+        if (lastDotIndex == -1) {
+            return treeMaker.Ident(names.fromString(qualifiedName));
+        }
+
+        String packageName = qualifiedName.substring(0, lastDotIndex);
+        String simpleName = qualifiedName.substring(lastDotIndex + 1);
+
+        JCTree.JCExpression qualIdent = null;
+        for (String part : packageName.split("\\.")) {
+            JCTree.JCExpression segment = treeMaker.Ident(names.fromString(part));
+            if (qualIdent == null) {
+                qualIdent = segment;
+            } else {
+                qualIdent = treeMaker.Select(qualIdent, names.fromString(part));
+            }
+        }
+
+        qualIdent = treeMaker.Select(qualIdent, names.fromString(simpleName));
+
+        return qualIdent;
     }
 
     /**
@@ -243,11 +284,11 @@ public class YiliTableProcessor extends AbstractProcessor {
                         if (annotation != null) {
                             if (annotation.getAnnotationType() != null) {
                                 if (annotation.getAnnotationType().type != null) {
-                                    if ("cn.yili.mybatis.ann.OverrideOrderBy".equals(annotation.getAnnotationType().type.toString())) {
+                                    if ("com.yilijishu.mybatis.ann.OverrideOrderBy".equals(annotation.getAnnotationType().type.toString())) {
                                         comMethod.setOverrideOrderBy(true);
                                         comMethod.setOverriderOrderByMethod(jcMethodDecl.getName().toString());
                                     }
-                                    if ("cn.yili.mybatis.ann.AddSelectCondition".equals(annotation.getAnnotationType().type.toString())) {
+                                    if ("com.yilijishu.mybatis.ann.AddSelectCondition".equals(annotation.getAnnotationType().type.toString())) {
                                         comMethod.setAddSelectCondition(true);
                                         java.util.List<String> selects = comMethod.getAddSelectConditionMethod();
                                         if (selects == null) {
@@ -311,7 +352,17 @@ public class YiliTableProcessor extends AbstractProcessor {
                 // 获取属性名
                 for (JCTree.JCAnnotation an : jcVariableDecl.mods.getAnnotations()) {
                     switch (an.getAnnotationType().type.toString()) {
-                        case "cn.yili.mybatis.ann.ColumnType": {
+                        case "com.yilijishu.mybatis.ann.DelTag": {
+                            comBean.setDelTag(true);
+                            for (Pair<Symbol.MethodSymbol, Attribute> a : an.attribute.values) {
+                                if ("value()".equals(a.fst.toString())) {
+                                    String tmp = a.snd.getValue().toString();
+                                    comBean.setDelTagValue(tmp);
+                                }
+                            }
+                            break;
+                        }
+                        case "com.yilijishu.mybatis.ann.ColumnType": {
                             for (Pair<Symbol.MethodSymbol, Attribute> a : an.attribute.values) {
                                 if ("value()".equals(a.fst.toString())) {
                                     String tmp = a.snd.getValue().toString();
@@ -320,11 +371,11 @@ public class YiliTableProcessor extends AbstractProcessor {
                             }
                             break;
                         }
-                        case "cn.yili.mybatis.ann.ColumnNotNull": {
+                        case "com.yilijishu.mybatis.ann.ColumnNotNull": {
                             comBean.setNotNull(true);
                             break;
                         }
-                        case "cn.yili.mybatis.ann.Column": {
+                        case "com.yilijishu.mybatis.ann.Column": {
                             comBean.setColumn(true);
                             for (Pair<Symbol.MethodSymbol, Attribute> a : an.attribute.values) {
                                 if ("value()".equals(a.fst.toString())) {
@@ -334,7 +385,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                             }
                             break;
                         }
-                        case "cn.yili.mybatis.ann.DefWhere": {
+                        case "com.yilijishu.mybatis.ann.DefWhere": {
                             comBean.setDefWhere(true);
                             for (Pair<Symbol.MethodSymbol, Attribute> a : an.attribute.values) {
                                 if ("value()".equals(a.fst.toString())) {
@@ -343,7 +394,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                             }
                             break;
                         }
-                        case "cn.yili.mybatis.ann.OrderBy": {
+                        case "com.yilijishu.mybatis.ann.OrderBy": {
                             comBean.setOrderBy(true);
                             for (Pair<Symbol.MethodSymbol, Attribute> a : an.attribute.values) {
                                 if ("value()".equals(a.fst.toString())) {
@@ -361,7 +412,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                             }
                             break;
                         }
-                        case "cn.yili.mybatis.ann.IfFieldCondition": {
+                        case "com.yilijishu.mybatis.ann.IfFieldCondition": {
                             comBean.setIfFieldCondition(true);
                             for (Pair<Symbol.MethodSymbol, Attribute> a : an.attribute.values) {
                                 if ("value()".equals(a.fst.toString())) {
@@ -370,27 +421,27 @@ public class YiliTableProcessor extends AbstractProcessor {
                             }
                             break;
                         }
-                        case "cn.yili.mybatis.ann.IgnoreColumn": {
+                        case "com.yilijishu.mybatis.ann.IgnoreColumn": {
                             comBean.setIgnore(true);
                             break;
                         }
-                        case "cn.yili.mybatis.ann.IgnoreInsertColumn": {
+                        case "com.yilijishu.mybatis.ann.IgnoreInsertColumn": {
                             comBean.setIgnoreInsert(true);
                             break;
                         }
-                        case "cn.yili.mybatis.ann.TableId": {
+                        case "com.yilijishu.mybatis.ann.TableId": {
                             comBean.setTableId(true);
                             break;
                         }
-                        case "cn.yili.mybatis.ann.VirtualTableId": {
+                        case "com.yilijishu.mybatis.ann.VirtualTableId": {
                             comBean.setVirtualTableId(true);
                             break;
                         }
-                        case "cn.yili.mybatis.ann.AutoCreateTime": {
+                        case "com.yilijishu.mybatis.ann.AutoCreateTime": {
                             comBean.setAutoCreateTime(true);
                             break;
                         }
-                        case "cn.yili.mybatis.ann.AutoModifyTime": {
+                        case "com.yilijishu.mybatis.ann.AutoModifyTime": {
                             comBean.setAutoModifyTime(true);
                             break;
                         }
@@ -408,6 +459,12 @@ public class YiliTableProcessor extends AbstractProcessor {
             ComBean comBean = new ComBean();
             comBeans.add(comBean);
             comBean.setName(field.getName());
+
+            DelTag delTag = field.getDeclaredAnnotation(DelTag.class);
+            if(delTag != null) {
+                comBean.setDelTag(true);
+                comBean.setDelTagValue(delTag.value());
+            }
 
             AutoCreateTime autoCreateTime = field.getDeclaredAnnotation(AutoCreateTime.class);
             if(autoCreateTime != null) {
@@ -525,6 +582,9 @@ public class YiliTableProcessor extends AbstractProcessor {
         String tableIdColumnVal = null;
         String virtualTableId = null;
         String virtualTableIdColumn = null;
+        boolean genDelTag = false;
+        StringBuffer genDelTagBuffer = new StringBuffer();
+        StringBuffer genDelTagValueBuffer = new StringBuffer();
         if (comBeans != null && comBeans.size() > 0) {
             for (int jj = 0; jj < comBeans.size(); jj++) {
                 ComBean comBean = comBeans.get(jj);
@@ -853,6 +913,12 @@ public class YiliTableProcessor extends AbstractProcessor {
                 if (comBean.isOrderBy()) {
                     orderByList.add(comBean);
                 }
+                if(comBean.isDelTag()) {
+                    genDelTag = true;
+                    genDelTagBuffer.append(columnName);
+                    genDelTagValueBuffer.append(comBean.getDelTagValue());
+
+                }
             }
         }
         messager.printMessage(Diagnostic.Kind.NOTE, "开始设置排序" + orderByList);
@@ -920,6 +986,12 @@ public class YiliTableProcessor extends AbstractProcessor {
         results.add(buildMethod("baseGenDefWhere", defWhere.toString()));
         results.add(buildMethod("baseGenId", tableId.toString()));
         results.add(buildMethod("baseGenVirtualId", virTableId.toString()));
+        results.add(buildMethod("genDelTag", genDelTag));
+        if(genDelTag) {
+            results.add(buildMethod("genDelTagColumn", genDelTagBuffer.toString()));
+            results.add(buildMethod("genDelTagValue", genDelTagValueBuffer.toString()));
+        }
+
         results.add(buildMethod("baseGenUpdateAllSet", baseGenUpdateAllSet.substring(0, baseGenUpdateAllSet.length() - 1)));
         messager.printMessage(Diagnostic.Kind.NOTE, "开始生成脚本");
 
@@ -965,8 +1037,38 @@ public class YiliTableProcessor extends AbstractProcessor {
      * @return 返回方法声明
      */
     public JCTree.JCMethodDecl buildMethod(String method, ListBuffer<JCTree.JCStatement> statements) {
+        return buildMethod(method, statements, "String");
+    }
+
+    /**
+     * 生成方法（方法名， 步骤）
+     *
+     * @param method 要生成的名法名
+     * @param statements 声明代码树列表
+     * @param returnType 设定返回类型
+     * @return 返回方法声明
+     */
+    public JCTree.JCMethodDecl buildMethod(String method, ListBuffer<JCTree.JCStatement> statements, String returnType) {
         JCTree.JCBlock body = treeMaker.Block(0, statements.toList());
         messager.printMessage(Diagnostic.Kind.NOTE, "代码块:" + body.toString());
+        // 生成columnNames()方法
+        return treeMaker
+                .MethodDef(treeMaker.Modifiers(com.sun.tools.javac.code.Flags.PUBLIC), names.fromString(method),
+                        treeMaker.Ident(names.fromString(returnType)),
+                        List.nil(), List.nil(), List.nil(), body, null);
+    }
+
+    /**
+     * 生成返回String的方法（方法名， 字符串）
+     *
+     * @param method 方法名
+     * @param str 返回的字符串
+     * @return 返回方法声明
+     */
+    public JCTree.JCMethodDecl buildMethod(String method, String str) {
+        ListBuffer<JCTree.JCStatement> statements = new ListBuffer<>();
+        statements.append(treeMaker.Return(treeMaker.Literal(str)));
+        JCTree.JCBlock body = treeMaker.Block(0, statements.toList());
         // 生成columnNames()方法
         return treeMaker
                 .MethodDef(treeMaker.Modifiers(com.sun.tools.javac.code.Flags.PUBLIC), names.fromString(method),
@@ -975,22 +1077,20 @@ public class YiliTableProcessor extends AbstractProcessor {
     }
 
     /**
-     * 生成方法（方法名， 字符串）
+     * 生成返回boolean方法（方法名， 字符串）
      *
      * @param method 方法名
-     * @param str 返回的字符串
+     * @param bool 是否
      * @return 返回方法声明
      */
-    public JCTree.JCMethodDecl buildMethod(String method, String str) {
+    public JCTree.JCMethodDecl buildMethod(String method, boolean bool) {
         ListBuffer<JCTree.JCStatement> statements = new ListBuffer<>();
-
-        statements.append(treeMaker.Return(treeMaker.Literal(str)));
-
+        statements.append(treeMaker.Return(treeMaker.Literal(bool)));
         JCTree.JCBlock body = treeMaker.Block(0, statements.toList());
         // 生成columnNames()方法
         return treeMaker
                 .MethodDef(treeMaker.Modifiers(com.sun.tools.javac.code.Flags.PUBLIC), names.fromString(method),
-                        treeMaker.Ident(names.fromString("String")),
+                        treeMaker.Type(symtab.booleanType),
                         List.nil(), List.nil(), List.nil(), body, null);
     }
 

@@ -24,9 +24,11 @@
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/ann/DelTag.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/wapper/UpdateSql.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/ann/IfFieldCondition.java
+/Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/config/ObjectMapperConfig.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/service/impl/BaseServiceImpl.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/ann/OrderBy.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/constant/Constant.java
+/Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/service/StandardWeb.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/ann/IgnoreInsertColumn.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/build/AutoCreateAction.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/package-info.java

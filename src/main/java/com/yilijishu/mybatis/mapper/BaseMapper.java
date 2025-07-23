@@ -70,7 +70,7 @@ public interface BaseMapper<T> {
      * 查询-分页
      * @param p 实例
      * @param page 分页
-     * @return
+     * @return 返回集合
      */
     @SelectProvider(method = "select", type = BaseSqlProvider.class)
     List<T> select(@Param(PARAM_OBJECT) T p, @Param(PARAM_PAGE) Page page);
@@ -148,7 +148,7 @@ public interface BaseMapper<T> {
     /**
      * 条件删除
      * @param t
-     * @return
+     * @return 返回执行条数
      */
     @UpdateProvider(method = "delete", type = BaseSqlProvider.class)
     @ResultType(Integer.class)
@@ -166,9 +166,9 @@ public interface BaseMapper<T> {
 
     /**
      * 批量删除 - 根据虚拟ID
-     * @param t
-     * @param ids
-     * @return
+     * @param t 实例
+     * @param ids id集合
+     * @return 返回执行条数
      */
     @UpdateProvider(method = "deleteByVirtualIds", type = BaseSqlProvider.class)
     @ResultType(Integer.class)

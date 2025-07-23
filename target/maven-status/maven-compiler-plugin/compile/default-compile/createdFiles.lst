@@ -11,11 +11,13 @@ com/yilijishu/mybatis/ann/SetDataBase$DataBaseEnum.class
 com/yilijishu/mybatis/package-info.class
 com/yilijishu/mybatis/ann/AddSelectCondition.class
 com/yilijishu/mybatis/ann/VirtualTableId.class
+com/yilijishu/mybatis/service/StandardWeb.class
 com/yilijishu/mybatis/wapper/DeleteSql.class
 com/yilijishu/mybatis/ann/YiliTableProcessor.class
 com/yilijishu/mybatis/ann/IgnoreColumn.class
 com/yilijishu/mybatis/build/AutoCreateAction.class
 com/yilijishu/mybatis/entity/Page.class
+com/yilijishu/mybatis/config/ObjectMapperConfig.class
 com/yilijishu/mybatis/entity/ComMethod.class
 com/yilijishu/mybatis/ann/YiliTableProcessor$2.class
 com/yilijishu/mybatis/iter/BaseBeanInterface.class

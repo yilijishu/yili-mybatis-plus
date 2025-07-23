@@ -64,7 +64,7 @@ public class StandardWeb {
      * @param start       开始页数
      * @param size        长度
      * @param body        数据串
-     * @return
+     * @return 返回ApiResult标准输出
      */
     @PostMapping("/{packageName}/{entityName}/{operate}")
     public ApiResult<?> standard(@PathVariable("packageName") String packageName,

@@ -1,20 +1,24 @@
 package com.yilijishu.mybatis.mapper;
 
 import com.yilijishu.mybatis.entity.Page;
+import com.yilijishu.mybatis.iter.BaseBeanInterface;
 import com.yilijishu.mybatis.mapper.provider.BaseSqlProvider;
 import com.yilijishu.mybatis.wapper.DeleteSql;
 import com.yilijishu.mybatis.wapper.QuerySql;
 import com.yilijishu.mybatis.wapper.UpdateSql;
+import com.yilijishu.mybatis.wapper.YiliBaseSql;
 import org.apache.ibatis.annotations.*;
 
 import java.util.Collection;
 import java.util.List;
 
 @Mapper
-public interface BaseMapper<T> {
+public interface BaseMapper<T extends BaseBeanInterface> {
 
     String PARAM_PAGE = "page";
     String PARAM_OBJECT = "p";
+    String PARAM_OFFSET = "offset";
+    String PARAM_SIZE = "size";
 
     //--------------------------------------------------------- 标准产物.
     default void defaultMethod() {
@@ -98,7 +102,18 @@ public interface BaseMapper<T> {
      * @return 返回实例集合
      */
     @SelectProvider(method = "querySql", type = BaseSqlProvider.class)
-    List<T> querySql(@Param(PARAM_OBJECT) QuerySql<T> querySql);
+    List<T> querySql(@Param(PARAM_OBJECT) YiliBaseSql<T> querySql);
+
+
+    /**
+     * 自定义查询
+     * @param querySql 自定义查询实例
+     * @param offset 偏移量
+     * @param size size
+     * @return 返回实例集合
+     */
+    @SelectProvider(method = "querySqlOffset", type = BaseSqlProvider.class)
+    List<T> querySqlOffset(@Param(PARAM_OBJECT) YiliBaseSql<T> querySql, @Param(PARAM_OFFSET)Integer offset, @Param(PARAM_SIZE)Integer size);
 
     /**
      * 自定义查询-分页
@@ -107,7 +122,7 @@ public interface BaseMapper<T> {
      * @return 返回实例集合
      */
     @SelectProvider(method = "querySqlOfPage", type = BaseSqlProvider.class)
-    List<T> querySqlOfPage(@Param(PARAM_OBJECT) QuerySql<T> querySql, @Param(PARAM_PAGE) Page page);
+    List<T> querySqlOfPage(@Param(PARAM_OBJECT) YiliBaseSql<T> querySql, @Param(PARAM_PAGE) Page page);
 
     /**
      * 查询数据返回指定R
@@ -116,7 +131,7 @@ public interface BaseMapper<T> {
      * @return 返回实体
      */
     @SelectProvider(method = "querySql", type = BaseSqlProvider.class)
-    <R> R querySqlResultR(@Param(PARAM_OBJECT) QuerySql<T> querySql);
+    <R> List<R> querySqlResultR(@Param(PARAM_OBJECT) YiliBaseSql<T> querySql);
 
     /**
      * 查询单条数据
@@ -124,7 +139,7 @@ public interface BaseMapper<T> {
      * @return 返回数据
      */
     @SelectProvider(method = "querySqlOne", type = BaseSqlProvider.class)
-    T querySqlOne(@Param(PARAM_OBJECT) QuerySql<T> querySql);
+    T querySqlOne(@Param(PARAM_OBJECT) YiliBaseSql<T> querySql);
 
     /**
      * 查询单挑数据
@@ -133,7 +148,7 @@ public interface BaseMapper<T> {
      * @return 返回指定类数据
      */
     @SelectProvider(method = "querySqlOne", type = BaseSqlProvider.class)
-    <R> R querySqlResultROne(@Param(PARAM_OBJECT) QuerySql<T> querySql);
+    <R> R querySqlResultROne(@Param(PARAM_OBJECT) YiliBaseSql<T> querySql);
 
     /**
      * 自定义修改
@@ -142,12 +157,12 @@ public interface BaseMapper<T> {
      */
     @UpdateProvider(method = "updateSql", type = BaseSqlProvider.class)
     @ResultType(Integer.class)
-    Integer updateSql(UpdateSql<T> updateSql);
+    Integer updateSql(@Param(PARAM_OBJECT) YiliBaseSql<T> updateSql);
 
 
     /**
      * 条件删除
-     * @param t
+     * @param t 实例
      * @return 返回执行条数
      */
     @UpdateProvider(method = "delete", type = BaseSqlProvider.class)
@@ -182,6 +197,6 @@ public interface BaseMapper<T> {
      */
     @UpdateProvider(method = "deleteSql", type = BaseSqlProvider.class)
     @ResultType(Integer.class)
-    Integer deleteSql(@Param(PARAM_OBJECT) DeleteSql<T> deleteSql);
+    Integer deleteSql(@Param(PARAM_OBJECT) YiliBaseSql<T> deleteSql);
 
 }

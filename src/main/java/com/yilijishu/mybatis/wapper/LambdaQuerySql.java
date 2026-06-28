@@ -1,24 +1,35 @@
 package com.yilijishu.mybatis.wapper;
 
-
 import com.yilijishu.mybatis.iter.BaseBeanInterface;
+import com.yilijishu.mybatis.wapper.fun.SFunction;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 
-public class QuerySql<Entity extends BaseBeanInterface> extends YiliSql<Entity, String, QuerySql<Entity>>
+public class LambdaQuerySql<Entity extends BaseBeanInterface> extends LambdaYiliSql<Entity, LambdaQuerySql<Entity>>
         implements QueryInterface<Entity> {
-
     private List<String> select;
 
-    public QuerySql(Entity t) {
+    public LambdaQuerySql(Supplier<Entity> suppliery) {
+        super(suppliery.get());
+        select = new ArrayList<>();
+    }
+    public LambdaQuerySql(Entity t) {
         super(t);
-        this.orderBy = new ArrayList<>();
         select = new ArrayList<>();
     }
 
-    public QuerySql<Entity> select(String... column) {
+
+    public LambdaQuerySql<Entity> select(SFunction<Entity, ?>... column) {
+        if (column != null && column.length > 0) {
+            select.addAll(Arrays.asList(columnToString(column)));
+        }
+        return this;
+    }
+
+    public LambdaQuerySql<Entity> select(String... column) {
         if (column != null && column.length > 0) {
             select.addAll(Arrays.asList(column));
         }
@@ -39,4 +50,5 @@ public class QuerySql<Entity extends BaseBeanInterface> extends YiliSql<Entity, 
     public String toSql() {
         return toSql(entity);
     }
+
 }

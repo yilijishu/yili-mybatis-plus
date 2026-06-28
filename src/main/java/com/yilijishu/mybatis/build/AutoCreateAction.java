@@ -1,6 +1,7 @@
 package com.yilijishu.mybatis.build;
 
 
+import com.yilijishu.mybatis.iter.BaseBeanInterface;
 import com.yilijishu.mybatis.mapper.BaseMapper;
 import lombok.SneakyThrows;
 import org.springframework.context.ApplicationContext;
@@ -26,7 +27,7 @@ public class AutoCreateAction {
             ResolvableType resolvableType = ResolvableType.forInstance(bean).getSuperType();
             Class<?> genericType = resolvableType.getGeneric(0).resolve();
             Constructor<?> defaultConstructor = genericType.getDeclaredConstructor();
-            Object instance = defaultConstructor.newInstance();
+            BaseBeanInterface instance = (BaseBeanInterface) defaultConstructor.newInstance();
             bean.create(instance);
         }
     }

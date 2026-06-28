@@ -3,6 +3,7 @@ package com.yilijishu.mybatis.ann;
 
 import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.util.*;
+import com.yilijishu.mybatis.constant.Constant;
 import com.yilijishu.mybatis.entity.ComBean;
 import com.yilijishu.mybatis.entity.ComMethod;
 import com.google.auto.service.AutoService;
@@ -43,9 +44,6 @@ public class YiliTableProcessor extends AbstractProcessor {
 
     private Types types;
 
-    private static SetDataBase.DataBaseEnum DataBase = SetDataBase.DataBaseEnum.MYSQL;
-
-    private static String EscapeSymbol = "`";
 
     public YiliTableProcessor() {
         super();
@@ -85,17 +83,7 @@ public class YiliTableProcessor extends AbstractProcessor {
             for (Element element : roundEnv.getElementsAnnotatedWith(SetDataBase.class)) {
                 SetDataBase setDataBase = element.getAnnotation(SetDataBase.class);
                 if (setDataBase != null) {
-                    DataBase = setDataBase.value();
-                    switch (DataBase) {
-                        case MYSQL: {
-                            EscapeSymbol = "`";
-                            break;
-                        }
-                        default: {
-                            EscapeSymbol = "\"";
-                            break;
-                        }
-                    }
+                    Constant.dataBase = setDataBase.value();
                 }
             }
         }
@@ -566,17 +554,12 @@ public class YiliTableProcessor extends AbstractProcessor {
         updateSetStatement.append(treeMaker.VarDef(treeMaker.Modifiers(Flags.PARAMETER), names.fromString("result"), treeMaker.Ident(names.fromString("String")), treeMaker.Literal("")));
         updateWhereStatement.append(treeMaker.VarDef(treeMaker.Modifiers(Flags.PARAMETER), names.fromString("result"), treeMaker.Ident(names.fromString("String")), treeMaker.Literal("")));
         if (table.value() != null && !"".equals(table.value())) {
-            tableStr.append(" " + EscapeSymbol);
-            tableStr.append(table.value());
-            tableStr.append(EscapeSymbol + " ");
-            createBuffer.append("");
+            tableStr.append(Constant.escape(table.value()));
         } else {
-            tableStr.append(" " + EscapeSymbol);
-            tableStr.append(CamelUnderUtil.underName(element.getSimpleName().toString()));
-            tableStr.append(EscapeSymbol + " ");
+            tableStr.append(CamelUnderUtil.underName(Constant.escape(element.getSimpleName().toString())));
         }
 
-        sqlType.append(DataBase.name());
+        sqlType.append(Constant.dataBase.name());
 
         String tableIdVal = null;
         String tableIdColumnVal = null;
@@ -601,9 +584,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                 }
                 if (!comBean.isIgnoreInsert()) {
                     insertColumns.append(",");
-                    insertColumns.append(EscapeSymbol);
-                    insertColumns.append(columnName);
-                    insertColumns.append(EscapeSymbol);
+                    insertColumns.append(Constant.escape(columnName));
 
                     //判断是否为默认创建时间
                     if(!comBean.isAutoCreateTime()) {
@@ -612,7 +593,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                         insertNames2.append(name);
                         insertNames2.append("}");
                     } else {
-                        switch (DataBase) {
+                        switch (Constant.dataBase) {
                             case ORACLE: {
                                 insertNames2.append(",SYSDATE");
                                 break;
@@ -628,7 +609,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                         insertNames3.append(name);
                         insertNames3.append("}");
                     } else {
-                        switch (DataBase) {
+                        switch (Constant.dataBase) {
                             case ORACLE: {
                                 insertNames3.append(",SYSDATE");
                                 break;
@@ -643,23 +624,21 @@ public class YiliTableProcessor extends AbstractProcessor {
                 }
 
                 columns.append(",");
-                columns.append(EscapeSymbol);
-                columns.append(columnName);
-                columns.append(EscapeSymbol);
+                columns.append(Constant.escape(columnName));
 
 
-                createBuffer.append(" ");
+                createBuffer.append(Constant.SPACE);
                 createBuffer.append(columnName);
                 if(StringUtils.isNotBlank(comBean.getColumnType())) {
-                    createBuffer.append(" ");
+                    createBuffer.append(Constant.SPACE);
                     createBuffer.append(comBean.getColumnType());
-                    createBuffer.append(" ");
+                    createBuffer.append(Constant.SPACE);
                 } else {
                     switch (comBean.getDefTypeColumn()) {
                         case "java.lang.Integer":
                         case "int": {
-                            switch (DataBase) {
-                                case POSTGRESQL: {
+                            switch (Constant.dataBase) {
+                                case SQLITE: {
                                     createBuffer.append(" INTEGER ");
                                     break;
                                 }
@@ -676,7 +655,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                         }
                         case "long":
                         case "java.lang.Long": {
-                            switch (DataBase) {
+                            switch (Constant.dataBase) {
                                 case POSTGRESQL: {
                                     createBuffer.append(" BIGINT ");
                                     break;
@@ -694,7 +673,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                         }
                         case "java.lang.Boolean":
                         case "boolean": {
-                            switch (DataBase) {
+                            switch (Constant.dataBase) {
                                 case POSTGRESQL: {
                                     createBuffer.append(" BOOLEAN ");
                                     break;
@@ -721,7 +700,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                             break;
                         }
                         case "java.math.BigDecimal": {
-                            switch (DataBase) {
+                            switch (Constant.dataBase) {
                                 case POSTGRESQL: {
                                     createBuffer.append(" NUMERIC(14,2) ");
                                     break;
@@ -739,7 +718,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                         }
                         case "java.lang.Double":
                         case "double": {
-                            switch (DataBase) {
+                            switch (Constant.dataBase) {
                                 case POSTGRESQL: {
                                     createBuffer.append(" DOUBLE PRECISION ");
                                     break;
@@ -757,7 +736,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                         }
                         case "java.lang.Float":
                         case "float": {
-                            switch (DataBase) {
+                            switch (Constant.dataBase) {
                                 case POSTGRESQL: {
                                     createBuffer.append(" REAL ");
                                     break;
@@ -775,7 +754,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                         }
                         case "byte[]":
                         case "java.lang.Byte[]": {
-                            switch (DataBase) {
+                            switch (Constant.dataBase) {
                                 case POSTGRESQL: {
                                     createBuffer.append(" BYTEA ");
                                     break;
@@ -793,7 +772,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                         }
                         case "byte":
                         case "java.lang.Byte": {
-                            switch (DataBase) {
+                            switch (Constant.dataBase) {
                                 case POSTGRESQL: {
                                     createBuffer.append(" SMALLINT ");
                                     break;
@@ -810,7 +789,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                             break;
                         }
                         default: {
-                            switch (DataBase) {
+                            switch (Constant.dataBase) {
                                 case POSTGRESQL: {
                                     createBuffer.append(" VARCHAR(255) ");
                                     break;
@@ -831,17 +810,21 @@ public class YiliTableProcessor extends AbstractProcessor {
 
 
                 if(comBean.isTableId()) {
-                    switch (DataBase) {
+                    switch (Constant.dataBase) {
+                        case SQLSERVER: {
+                            createBuffer.append(" IDENTITY(1,1) PRIMARY KEY ");
+                            break;
+                        }
                         case POSTGRESQL: {
                             createBuffer.append(" SERIAL PRIMARY KEY ");
                             break;
                         }
                         case ORACLE: {
-                            createBuffer.append(" PRIMARY KEY ");
+                            createBuffer.append(" GENERATED ALWAYS AS IDENTITY PRIMARY KEY ");
                             break;
                         }
                         default: {
-                            createBuffer.append(" AUTO_INCREMENT PRIMARY KEY ");
+                            createBuffer.append(" PRIMARY KEY AUTO_INCREMENT ");
                             break;
                         }
                     }
@@ -865,11 +848,11 @@ public class YiliTableProcessor extends AbstractProcessor {
                 if (comBean.isVirtualTableId()) {
                     virtualTableId = name;
                     virtualTableIdColumn = columnName;
-                    virTableId.append(EscapeSymbol + columnName + EscapeSymbol);
+                    virTableId.append(Constant.escape(columnName));
                 }
                 if (comBean.isTableId()) {
                     //updateWhere.append(" and " + EscapeSymbol + columnName + EscapeSymbol + " = #{" + PARAM_OBJECT + name + "}");
-                    tableId.append(EscapeSymbol + columnName + EscapeSymbol);
+                    tableId.append(Constant.escape(columnName));
                     tableIdVal = name;
                     tableIdColumnVal = columnName;
                 } else if (!comBean.isVirtualTableId()) {
@@ -879,18 +862,18 @@ public class YiliTableProcessor extends AbstractProcessor {
                         if(!comBean.isAutoModifyTime()) {
                             updateSetStatement.append(treeMaker.If(
                                     treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(name, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
-                                    treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + EscapeSymbol + columnName + EscapeSymbol + " = #{" + PARAM_OBJECT + name + "} " + ","))),
+                                    treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + Constant.escape(columnName) + " = #{" + PARAM_OBJECT + name + "} " + ","))),
                                     null));
-                            baseGenUpdateAllSet.append(EscapeSymbol + columnName + EscapeSymbol + " = #{" + name + "} ,");
+                            baseGenUpdateAllSet.append(Constant.escape(columnName) + " = #{" + name + "} ,");
                         } else {
-                            switch (DataBase) {
+                            switch (Constant.dataBase) {
                                 case ORACLE: {
-                                    updateSetStatement.append(treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + EscapeSymbol + columnName + EscapeSymbol + " = SYSDATE " + ","))));
+                                    updateSetStatement.append(treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + Constant.escape(columnName) + " = SYSDATE " + ","))));
                                     baseGenUpdateAllSet.append(columnName + " = SYSDATE ,");
                                     break;
                                 }
                                 default: {
-                                    updateSetStatement.append(treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + EscapeSymbol + columnName + EscapeSymbol + " = NOW() " + ","))));
+                                    updateSetStatement.append(treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + Constant.escape(columnName) + " = NOW() " + ","))));
                                     baseGenUpdateAllSet.append(columnName + " = NOW() ,");
                                     break;
                                 }
@@ -906,8 +889,8 @@ public class YiliTableProcessor extends AbstractProcessor {
                             treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(name, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
                             comBean.isIfFieldCondition() ? treeMaker.If(
                                     treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString(comBean.getIfFieldConditionName())), List.nil()),
-                                    treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and " +EscapeSymbol + columnName + EscapeSymbol+" = #{" + PARAM_OBJECT + name + "} "))), null)
-                                    : treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and "+EscapeSymbol + columnName + EscapeSymbol+" = #{" + PARAM_OBJECT + name + "} "))),
+                                    treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and " + Constant.escape(columnName) + " = #{" + PARAM_OBJECT + name + "} "))), null)
+                                    : treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and "+ Constant.escape(columnName) + " = #{" + PARAM_OBJECT + name + "} "))),
                             null));
                 }
                 if (comBean.isOrderBy()) {
@@ -932,7 +915,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                 } else {
                     orderBy.append(CamelUnderUtil.underName(comBean.getName()));
                 }
-                orderBy.append(" ");
+                orderBy.append(Constant.SPACE);
                 orderBy.append(comBean.getOrderByVal());
                 if (i + 1 < orderByList.size()) {
                     orderBy.append(",");
@@ -964,8 +947,8 @@ public class YiliTableProcessor extends AbstractProcessor {
 
         if (StringUtils.isNotBlank(tableIdVal)) {
             updateWhereStatement.append(treeMaker.If(treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(tableIdVal, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
-                    treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  "+EscapeSymbol + tableIdColumnVal + EscapeSymbol+" = #{" + PARAM_OBJECT + tableIdVal + "} "))),
-                    StringUtils.isNotBlank(virtualTableId) ? treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  "+EscapeSymbol + virtualTableIdColumn + EscapeSymbol+" = #{" + PARAM_OBJECT + virtualTableId + "} "))) : null
+                    treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  "+ Constant.escape( tableIdColumnVal) + " = #{" + PARAM_OBJECT + tableIdVal + "} "))),
+                    StringUtils.isNotBlank(virtualTableId) ? treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  "+ Constant.escape(virtualTableIdColumn) + " = #{" + PARAM_OBJECT + virtualTableId + "} "))) : null
             ));
         }
 

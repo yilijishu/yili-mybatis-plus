@@ -28,7 +28,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer insert(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.insert(p);
+        return baseManager.insert((BaseBeanInterface) p);
     }
 
     /**
@@ -53,7 +53,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer update(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.update(p);
+        return baseManager.update((BaseBeanInterface)p);
     }
 
     /**
@@ -65,7 +65,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer updateIfNot(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.updateNotIfNull(p);
+        return baseManager.updateNotIfNull((BaseBeanInterface)p);
     }
 
 
@@ -78,7 +78,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer delete(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.delete(p);
+        return baseManager.delete((BaseBeanInterface)p);
 
     }
 
@@ -92,7 +92,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer deleteByIds(Object p, List ids) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.deleteByIds(p, ids);
+        return baseManager.deleteByIds((BaseBeanInterface)p, ids);
     }
 
     /**
@@ -105,7 +105,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer deleteByVirtualIds(Object p, List ids) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.deleteByVirtualIds(p, ids);
+        return baseManager.deleteByVirtualIds((BaseBeanInterface)p, ids);
     }
 
     /**
@@ -127,7 +127,7 @@ public class BaseServiceImpl implements BaseService {
             String value = bbi.genDelTagValue();
             String id = bbi.baseGenId();
             BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-            return baseManager.updateSql(new UpdateSql(p).set(column, value).in(id, ids));
+            return baseManager.updateSql(new UpdateSql<>(bbi).set(column, value).in(id, ids));
         } else {
             return 0;
         }
@@ -152,7 +152,7 @@ public class BaseServiceImpl implements BaseService {
             String value = bbi.genDelTagValue();
             String virtualId = bbi.baseGenVirtualId();
             BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-            return baseManager.updateSql(new UpdateSql(p).set(column, value).in(virtualId, ids));
+            return baseManager.updateSql(new UpdateSql<>(bbi).set(column, value).in(virtualId, ids));
         } else {
             return 0;
         }
@@ -168,9 +168,9 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public List<Object> selectByPage(Object p, Page page) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        page.setCount(baseManager.count(p));
+        page.setCount(baseManager.count((BaseBeanInterface)p));
         if (page.isQuery()) {
-            return baseManager.select(p, page);
+            return baseManager.select((BaseBeanInterface)p, page);
         }
         return new ArrayList<>();
     }
@@ -184,7 +184,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public List<Object> select(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.select(p);
+        return baseManager.select((BaseBeanInterface)p);
     }
 
     /**
@@ -196,6 +196,6 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Object get(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.get(p);
+        return baseManager.get((BaseBeanInterface)p);
     }
 }

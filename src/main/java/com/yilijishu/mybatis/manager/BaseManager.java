@@ -1,16 +1,15 @@
 package com.yilijishu.mybatis.manager;
 
 import com.yilijishu.mybatis.entity.Page;
+import com.yilijishu.mybatis.iter.BaseBeanInterface;
 import com.yilijishu.mybatis.mapper.BaseMapper;
-import com.yilijishu.mybatis.wapper.DeleteSql;
-import com.yilijishu.mybatis.wapper.QuerySql;
-import com.yilijishu.mybatis.wapper.UpdateSql;
+import com.yilijishu.mybatis.wapper.YiliBaseSql;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
 import java.util.List;
 
-public class BaseManager<T, TB extends BaseMapper<T>> {
+public class BaseManager<T extends BaseBeanInterface, TB extends BaseMapper<T>> {
     //-----------------------------------------标准产物START-----------------------------------------
     @Autowired
     protected TB mapper;
@@ -52,27 +51,27 @@ public class BaseManager<T, TB extends BaseMapper<T>> {
         return mapper.count(p);
     }
 
-    public List<T> querySql(QuerySql<T> querySql) {
+    public List<T> querySql(YiliBaseSql<T> querySql) {
         return mapper.querySql(querySql);
     }
 
-    public List<T> querySqlOfPage(QuerySql<T> querySql, Page page) {
+    public List<T> querySqlOfPage(YiliBaseSql<T> querySql, Page page) {
         return mapper.querySqlOfPage(querySql, page);
     }
 
-    public <R> R querySqlResultR(QuerySql<T> querySql) {
+    public <R> List<R> querySqlResultR(YiliBaseSql<T> querySql) {
         return mapper.querySqlResultR(querySql);
     }
 
-    public <R> R querySqlResultROne(QuerySql<T> querySql) {
+    public <R> R querySqlResultROne(YiliBaseSql<T> querySql) {
         return mapper.querySqlResultROne(querySql);
     }
 
-    public T querySqlOne(QuerySql<T> querySql) {
+    public T querySqlOne(YiliBaseSql<T> querySql) {
         return mapper.querySqlOne(querySql);
     }
 
-    public Integer updateSql(UpdateSql<T> updateSql) {
+    public Integer updateSql(YiliBaseSql<T> updateSql) {
         return mapper.updateSql(updateSql);
     }
 
@@ -86,14 +85,13 @@ public class BaseManager<T, TB extends BaseMapper<T>> {
     }
 
 
-
     public Integer deleteByVirtualIds(T t, Collection<?> ids) {
         return mapper.deleteByVirtualIds(t, ids);
 
     }
 
 
-    public Integer deleteSql(DeleteSql<T> deleteSql) {
+    public Integer deleteSql(YiliBaseSql<T> deleteSql) {
         return mapper.deleteSql(deleteSql);
     }
 

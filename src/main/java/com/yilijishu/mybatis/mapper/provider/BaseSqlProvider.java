@@ -1,19 +1,23 @@
 package com.yilijishu.mybatis.mapper.provider;
 
+import com.yilijishu.mybatis.ann.SetDataBase;
+import com.yilijishu.mybatis.constant.Constant;
+import com.yilijishu.mybatis.entity.Page;
 import com.yilijishu.mybatis.iter.BaseBeanInterface;
-import com.yilijishu.mybatis.wapper.DeleteSql;
-import com.yilijishu.mybatis.wapper.QuerySql;
-import com.yilijishu.mybatis.wapper.UpdateSql;
-import com.yilijishu.utils.exceptions.BizException;
+import com.yilijishu.mybatis.wapper.YiliBaseSql;
 import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.ibatis.annotations.Param;
 
 import java.text.MessageFormat;
 import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 public class BaseSqlProvider {
+
+    static final String PARAM_PAGE = "page";
+    static final String PARAM_OBJECT = "p";
+    static final String PARAM_OFFSET = "offset";
+    static final String PARAM_SIZE = "size";
 
     /**
      * baseGenTable  生成的表名  table_name
@@ -34,379 +38,356 @@ public class BaseSqlProvider {
      * genDelTag 生成逻辑删除位 true false
      * genDelTagColumn 生成逻辑删除属性 base_1
      * genDelTagValue 生成删除标记值 1
-     *
      */
 
+
     /**
-     * 组装创建语句
-     * @param map  mybatis 数据参数map
+     * 设置数据库
+     * @param p 实例
+     * @param <T> 实例
+     */
+    public <T extends BaseBeanInterface> void setDb(T p) {
+        if (Constant.dataBase == null) {
+            Constant.dataBase = SetDataBase.DataBaseEnum.convert(p.baseSqlDatabase());
+        }
+    }
+
+    /**
+     * 创建
+     * @param p 实例
+     * @param <T> 实例范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String create(Map<String, Object> map) {
-        Object obj = map.get("p");
+    public <T extends BaseBeanInterface> String create(@Param(PARAM_OBJECT) T p) {
+        setDb(p);
         StringBuffer sbf = new StringBuffer();
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
-        String table = bbi.baseGenTable();
-        String database = bbi.baseSqlDatabase();
-        sbf.append("create table ");
-        switch (database) {
-            case "MYSQL" :
-            case "POSTGRESQL" : {
-                sbf.append(" IF NOT EXISTS ");
-                break;
-            }
-            default: break;
-        }
-        sbf.append(table);
+        String database = p.baseSqlDatabase();
+        sbf.append(" CREATE TABLE ");
+        sbf.append(p.baseGenTable());
         sbf.append(" (");
-        sbf.append(bbi.baseCreateTable());
-        sbf.append(" ); ");
-        switch (database) {
-            case "ORACLE": {
-                sbf.append("CREATE SEQUENCE " + table + "_seq START WITH 1 INCREMENT BY 1;");
-                sbf.append("CREATE OR REPLACE TRIGGER " + table + "_trigger\n" +
-                        "BEFORE INSERT ON "+table+"\n" +
-                        "FOR EACH ROW\n" +
-                        "BEGIN\n" +
-                        "    SELECT " + table + "_seq.NEXTVAL INTO :NEW." + bbi.baseGenId() +" FROM dual;\n" +
-                        "END;");
-                break;
-            }
-            default: break;
-        }
-
+        sbf.append(p.baseCreateTable());
+        sbf.append(" ) ");
         return sbf.toString();
     }
 
     /**
-     *
      * 插入语句组装
-     * @param map  mybatis 数据参数map
+     * @param p 实例
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String insert(Map<String, Object> map) {
-
-        Object obj = map.get("p");
+    public <T extends BaseBeanInterface> String insert(@Param(PARAM_OBJECT) T p) {
+        setDb(p);
         StringBuffer sbf = new StringBuffer();
         sbf.append("insert into ");
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
-        sbf.append(bbi.baseGenTable());
+        sbf.append(p.baseGenTable());
         sbf.append(" (");
-        sbf.append(bbi.baseGenInertColumnNames());
+        sbf.append(p.baseGenInertColumnNames());
         sbf.append(") values (");
-        sbf.append(bbi.baseGenInsertNames());
+        sbf.append(p.baseGenInsertNames());
         sbf.append(")");
 
         return sbf.toString();
     }
+
     /**
      * 修改语句组装
-     * @param map  mybatis 数据参数map
+     *
+     * @param p 实例
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String update(Map<String, Object> map) {
-        Object obj = map.get("p");
+    public <T extends BaseBeanInterface> String update(@Param(PARAM_OBJECT) T p) {
+        setDb(p);
         StringBuffer sbf = new StringBuffer();
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
         sbf.append("update ");
-        sbf.append(bbi.baseGenTable());
+        sbf.append(p.baseGenTable());
         sbf.append(" set ");
-        sbf.append(bbi.baseGenUpdateSet());
+        sbf.append(p.baseGenUpdateSet());
         sbf.append(" where ");
-        sbf.append(bbi.baseGenUpdateWhere());
-
+        sbf.append(p.baseGenUpdateWhere());
         return sbf.toString();
     }
+
     /**
      * 判断是否不为空修改语句组装
-     * @param map  mybatis 数据参数map
+     *
+     * @param p
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String updateNotIfNull(Map<String, Object> map) {
-        Object obj = map.get("p");
+    public <T extends BaseBeanInterface> String updateNotIfNull(@Param(PARAM_OBJECT) T p) {
+        setDb(p);
         StringBuffer sbf = new StringBuffer();
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
         sbf.append("update ");
-        sbf.append(bbi.baseGenTable());
+        sbf.append(p.baseGenTable());
         sbf.append(" set ");
-        sbf.append(bbi.baseGenUpdateAllSet());
+        sbf.append(p.baseGenUpdateAllSet());
         sbf.append(" where ");
-        sbf.append(bbi.baseGenUpdateWhere());
+        sbf.append(p.baseGenUpdateWhere());
 
         return sbf.toString();
     }
 
     /**
      * 批量插入语句组装
-     * @param map  mybatis 数据参数map
+     *
+     * @param p 实例列表
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String insertAll(Map<String, Object> map) {
+    public <T extends BaseBeanInterface> String insertAll(@Param("list") Collection<T> p) {
+
         StringBuffer sbf = new StringBuffer();
-        Object obj2 = map.get("list");
-        if (obj2 != null && obj2 instanceof List) {
-            List<?> list = (List<?>) obj2;
-            if (list != null && list.size() > 0) {
-                Object obj = list.get(0);
-                if(!(obj instanceof BaseBeanInterface)){
-                    throw new BizException("无效的实体");
+        if (p != null && p.size() > 0) {
+            BaseBeanInterface obj = p.stream().findFirst().orElse(null);
+            setDb(obj);
+            sbf.append("insert into ");
+            sbf.append(obj.baseGenTable());
+            sbf.append(" (");
+            sbf.append(obj.baseGenInertColumnNames());
+            sbf.append(") values ");
+            MessageFormat messageFormat = new MessageFormat(obj.baseGenInsertListNames());
+            int i = 0;
+            for (Object tmp : p) {
+                if (i > 0) {
+                    sbf.append(",");
                 }
-                BaseBeanInterface bbi = (BaseBeanInterface) obj;
-                sbf.append("insert into ");
-                sbf.append(bbi.baseGenTable());
-                sbf.append(" (");
-                sbf.append(bbi.baseGenInertColumnNames());
-                sbf.append(") values ");
-                MessageFormat messageFormat = new MessageFormat(bbi.baseGenInsertListNames());
-                for (int i = 0; i < list.size(); i++) {
-                    sbf.append("(");
-                    sbf.append(messageFormat.format(new Object[]{i}));
-                    sbf.append(")");
-                    if (i + 1 < list.size()) {
-                        sbf.append(",");
-                    }
-                }
+                sbf.append("(");
+                sbf.append(messageFormat.format(new Object[]{i}));
+                sbf.append(")");
+
+                i++;
             }
         }
+
         return sbf.toString();
     }
 
     //----基础方法.
+
     /**
      * 查询语句组装
-     * @param map  mybatis 数据参数map
+     *
+     * @param p    实例
+     * @param page 分页实例
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String select(Map<String, Object> map) {
-        Object obj = map.get("p");
+    public <T extends BaseBeanInterface> String select(@Param(PARAM_OBJECT) T p, @Param(PARAM_PAGE) Page page) {
+        setDb(p);
         StringBuffer sbf = new StringBuffer();
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
-        sbf.append("select ");
-        sbf.append(bbi.baseGenColumnNames());
-        sbf.append(" from ");
-        sbf.append(bbi.baseGenTable());
-        sbf.append(bbi.baseGenDefWhere());
-        sbf.append(bbi.baseGenSelectWhere());
-        sbf.append(bbi.baseGenOrderBy());
-        if (map.get("page") != null) {
-            String database = bbi.baseSqlDatabase();
-            switch (database) {
-                case "MYSQL" :
-                case "POSTGRESQL" : {
-                    sbf.append("        LIMIT ${page.start} OFFSET ${page.pageSize} ");
-                    break;
-                }
-                case "ORACLE" : {
-                    sbf.append("    OFFSET ${page.pageSize} ROWS FETCH NEXT ${page.start} ROWS ONLY ");
-                    break;
-                }
-                default: break;
-            }
+        sbf.append(" SELECT ");
+        sbf.append(p.baseGenColumnNames());
+        sbf.append(" FROM ");
+        sbf.append(p.baseGenTable());
+        sbf.append(p.baseGenDefWhere());
+        sbf.append(p.baseGenSelectWhere());
+        sbf.append(p.baseGenOrderBy());
+        if (page != null) {
+            sbf.append(Constant.limitEscape(page.getStart().toString(), page.getPageSize().toString()));
         }
         return sbf.toString();
     }
+
     /**
      * 获取单条语句组装
-     * @param map  mybatis 数据参数map
+     *
+     * @param p 实体
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String get(Map<String, Object> map) {
-        Object obj = map.get("p");
+    public <T extends BaseBeanInterface> String get(@Param(PARAM_OBJECT) T p) {
+        setDb(p);
         StringBuffer sbf = new StringBuffer();
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
-        sbf.append("select ");
-        sbf.append(bbi.baseGenColumnNames());
-        sbf.append(" from ");
-        sbf.append(bbi.baseGenTable());
-        sbf.append(bbi.baseGenDefWhere());
-        sbf.append(bbi.baseGenSelectWhere());
-        sbf.append(bbi.baseGenOrderBy());
-
-        String database = bbi.baseSqlDatabase();
-        switch (database) {
-            case "MYSQL" :
-            case "POSTGRESQL" : {
-                sbf.append("  limit 1 ");
-                break;
-            }
-            case "ORACLE" : {
-                sbf.append("  FETCH FIRST 1 ROW ONLY ");
-                break;
-            }
-            default: break;
-        }
-
+        sbf.append(" SELECT ");
+        sbf.append(p.baseGenColumnNames());
+        sbf.append(" FROM ");
+        sbf.append(p.baseGenTable());
+        sbf.append(p.baseGenDefWhere());
+        sbf.append(p.baseGenSelectWhere());
+        sbf.append(p.baseGenOrderBy());
+        sbf.append(Constant.limitEscape("0", "1"));
         return sbf.toString();
     }
+
     /**
      * 查询符合条件的语句总条数
-     * @param map  mybatis 数据参数map
+     *
+     * @param p 实例
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String count(Map<String, Object> map) {
-        Object obj = map.get("p");
+    public <T extends BaseBeanInterface> String count(@Param(PARAM_OBJECT) T p) {
+        setDb(p);
         StringBuffer sbf = new StringBuffer();
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
-        sbf.append("select ");
-        sbf.append("count(*)");
-        sbf.append(" from ");
-        sbf.append(bbi.baseGenTable());
-        sbf.append(bbi.baseGenDefWhere());
-        sbf.append(bbi.baseGenSelectWhere());
-
+        sbf.append(" SELECT ");
+        sbf.append(" COUNT(1) ");
+        sbf.append(" FROM ");
+        sbf.append(p.baseGenTable());
+        sbf.append(p.baseGenDefWhere());
+        sbf.append(p.baseGenSelectWhere());
         return sbf.toString();
     }
+
     /**
      * 自定义sql查询
-     * @param map  mybatis 数据参数map
+     *
+     * @param querySql YiliBaseSql实例
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String querySql(Map<String, Object> map) {
-        Object obj = map.get("p");
-        if (obj instanceof QuerySql) {
-            QuerySql<?> querySql = (QuerySql<?>) obj;
-            return querySql.toSql();
-        }
+    public <T extends BaseBeanInterface> String querySql(@Param(PARAM_OBJECT) YiliBaseSql<T> querySql) {
+        return querySql.toSql();
+    }
+
+    /**
+     * 自定义sql查询
+     *
+     * @param querySql YiliBaseSql实例
+     * @param offset 偏移量
+     * @param size size
+     * @param <T> 范型
+     * @return 返回sql
+     */
+    @SneakyThrows
+    public <T extends BaseBeanInterface> String querySqlOffset(@Param(PARAM_OBJECT) YiliBaseSql<T> querySql, @Param(PARAM_OFFSET) Integer offset, @Param(PARAM_SIZE) Integer size) {
+        StringBuffer sbf = new StringBuffer();
+        sbf.append(querySql.toSql());
+        sbf.append(Constant.limitEscape(offset.toString(), size.toString()));
         throw new RuntimeException("使用了无效的标准组件");
     }
+
 
     /**
      * 自定义sql查询，分页版本
-     * @param map mybatis 数据参数map
+     *
+     * @param querySql YiliBaseSql实例
+     * @param page 分页实例
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String querySqlOfPage(Map<String, Object> map) {
-        Object obj = map.get("p");
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
-        if (obj instanceof QuerySql) {
-            QuerySql<?> querySql = (QuerySql<?>) obj;
-            String result = querySql.toSql();
-            String database = bbi.baseSqlDatabase();
-            switch (database) {
-                case "ORACLE" : {
-                    result += "    OFFSET ${page.pageSize} ROWS FETCH NEXT ${page.start} ROWS ONLY ";
-                    break;
-                }
-                case "MYSQL" :
-                case "POSTGRESQL" :
-                default: {
-                    result += "        LIMIT ${page.start} OFFSET ${page.pageSize} ";
-                    break;
-                }
-            }
-            return result;
-        }
-        throw new RuntimeException("使用了无效的标准组件");
+    public <T extends BaseBeanInterface> String querySqlOfPage(@Param(PARAM_OBJECT) YiliBaseSql<T> querySql, @Param(PARAM_PAGE) Page page) {
+        StringBuffer stringBuffer = new StringBuffer();
+        stringBuffer.append(querySql.toSql());
+        stringBuffer.append(Constant.limitEscape(page.getStart().toString(), page.getPageSize().toString()));
+        return stringBuffer.toString();
     }
+
 
     /**
      * 自定义sql查询 取第一条
-     * @param map  mybatis 数据参数map
+     *
+     * @param querySql YiliBaseSql实例
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String querySqlOne(Map<String, Object> map) {
-        Object obj = map.get("p");
-        if (obj instanceof QuerySql) {
-            QuerySql<?> querySql = (QuerySql<?>) obj;
-            return querySql.toSqlOne();
-        }
-        throw new RuntimeException("使用了无效的标准组件");
+    public <T extends BaseBeanInterface> String querySqlOne(@Param(PARAM_OBJECT) YiliBaseSql<T> querySql) {
+        StringBuffer stringBuffer = new StringBuffer();
+        stringBuffer.append(querySql.toSql());
+        stringBuffer.append(Constant.limitEscape("0", "1"));
+        return stringBuffer.toString();
     }
+
     /**
      * 自定义sql修改
-     * @param updateSql  mybatis 数据参数map
-     * @param <T> 泛型类
+     *
+     * @param updateSql YiliBaseSql实例
+     * @param <T>       泛型类
      * @return 返回sql
      */
     @SneakyThrows
-    public <T> String updateSql(UpdateSql<T> updateSql) {
+    public <T extends BaseBeanInterface> String updateSql(@Param(PARAM_OBJECT) YiliBaseSql<T> updateSql) {
         return updateSql.toSql();
     }
+
     /**
      * 根据主键ID组装删除语句
-     * @param map  mybatis 数据参数map
+     *
+     * @param t 实例
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String delete(Map<String, Object> map) {
-        Object obj = map.get("p");
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
+    public <T extends BaseBeanInterface> String delete(@Param(PARAM_OBJECT) T t) {
+        setDb(t);
         StringBuilder sbf = new StringBuilder();
-        sbf.append("delete from ");
-        sbf.append(bbi.baseGenTable());
-        sbf.append(bbi.baseGenDefWhere());
-        sbf.append(bbi.baseGenSelectWhere());
+        sbf.append(" DELETE FROM ");
+        sbf.append(t.baseGenTable());
+        sbf.append(t.baseGenDefWhere());
+        sbf.append(t.baseGenSelectWhere());
+        return sbf.toString();
+    }
+
+    /**
+     * 根据主键ID删除语句组装
+     *
+     * @param t 实例
+     * @param ids id列表
+     * @param <T> 范型
+     * @return 返回sql
+     */
+    @SneakyThrows
+    public <T extends BaseBeanInterface> String deleteByIds(@Param(PARAM_OBJECT) T t, @Param("ids") Collection<?> ids) {
+        setDb(t);
+        StringBuilder sbf = new StringBuilder();
+        sbf.append(" DELETE FROM ");
+        sbf.append(t.baseGenTable());
+        sbf.append(" WHERE ");
+        sbf.append(t.baseGenId());
+        sbf.append(" IN (");
+        if (ids != null && ids.size() > 0) {
+            int i = 0;
+            for (Object o : ids) {
+                if (i > 0) {
+                    sbf.append(", ");
+                }
+                sbf.append(Constant.convertObject(o));
+                i++;
+            }
+        }
+        sbf.append(")");
         return sbf.toString();
     }
 
     /**
      * 根据虚拟ID组装批量删除语句
-     * @param map  mybatis 数据参数map
+     *
+     * @param t 实例
+     * @param ids id列表
+     * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public String deleteByVirtualIds(Map<String, Object> map) {
-        Object obj = map.get("p");
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
+    public <T extends BaseBeanInterface> String deleteByVirtualIds(@Param(PARAM_OBJECT) T t, @Param("ids") Collection<?> ids) {
+        setDb(t);
         StringBuilder sbf = new StringBuilder();
-        Collection<?> collection = (Collection<?>) map.get("ids");
-        sbf.append("delete from ");
-        sbf.append(bbi.baseGenTable());
-        sbf.append(" where ");
-        String str = bbi.baseGenVirtualId();
+        sbf.append(" DELETE FROM ");
+        sbf.append(t.baseGenTable());
+        sbf.append(" WHERE ");
+        String str = t.baseGenVirtualId();
         if (StringUtils.isNotBlank(str)) {
             sbf.append(str);
-            sbf.append(" in (");
-            if (collection != null && collection.size() > 0) {
-                for (Object o : collection) {
-                    if (o instanceof Integer || o instanceof Long) {
-                        sbf.append(o);
-                    } else {
-                        sbf.append("'");
-                        sbf.append(o);
-                        sbf.append("'");
+            sbf.append(" IN (");
+            if (ids != null && ids.size() > 0) {
+                int i = 0;
+                for (Object o : ids) {
+                    if (i > 0) {
+                        sbf.append(", ");
                     }
+                    sbf.append(Constant.convertObject(o));
+                    i++;
                 }
             }
             sbf.append(")");
@@ -415,56 +396,17 @@ public class BaseSqlProvider {
         }
         return sbf.toString();
     }
-    /**
-     * 根据主键ID删除语句组装
-     * @param map  mybatis 数据参数map
-     * @return 返回sql
-     */
-    @SneakyThrows
-    public String deleteByIds(Map<String, Object> map) {
-        Object obj = map.get("p");
-        if(!(obj instanceof BaseBeanInterface)){
-            throw new BizException("无效的实体");
-        }
-        BaseBeanInterface bbi = (BaseBeanInterface) obj;
-        StringBuilder sbf = new StringBuilder();
-        Collection<?> collection = (Collection<?>) map.get("ids");
-        sbf.append("delete from ");
-        sbf.append(bbi.baseGenTable());
-        sbf.append(" where ");
-        String str = bbi.baseGenId();
-        if (StringUtils.isNotBlank(str)) {
-            sbf.append(str);
-            sbf.append(" in (");
-            if (collection != null && collection.size() > 0) {
-                for (Object o : collection) {
-                    if (o instanceof Integer || o instanceof Long) {
-                        sbf.append(o);
-                    } else {
-                        sbf.append("'");
-                        sbf.append(o);
-                        sbf.append("'");
-                    }
-                }
-            }
-            sbf.append(")");
-        } else {
-            throw new RuntimeException("没有定义主键");
-        }
-        return sbf.toString();
-    }
+
+
     /**
      * 自定义删除语句
-     * @param map  mybatis 数据参数map
+     *
+     * @param deleteSql YiliBaseSql实例
+     * @param <T> 范型
      * @return 返回sql
      */
-    public String deleteSql(Map<String, Object> map) {
-        Object obj = map.get("p");
-        if (obj instanceof DeleteSql) {
-            DeleteSql<?> deleteSql = (DeleteSql<?>) obj;
-            return deleteSql.toSql();
-        }
-        throw new RuntimeException("使用了无效的标准组件");
+    public <T extends BaseBeanInterface> String deleteSql(@Param(PARAM_OBJECT) YiliBaseSql<T> deleteSql) {
+        return deleteSql.toSql();
     }
 
 

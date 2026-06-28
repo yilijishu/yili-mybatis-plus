@@ -1,5 +1,7 @@
 package com.yilijishu.mybatis.iter;
 
+import com.yilijishu.mybatis.ann.SetDataBase;
+
 public interface BaseBeanInterface {
 
     /**
@@ -147,5 +149,5 @@ public interface BaseBeanInterface {
     default String genDelTagValue() {
         return "";
     }
-
+    
 }

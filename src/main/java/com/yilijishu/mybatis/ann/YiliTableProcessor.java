@@ -66,7 +66,9 @@ public class YiliTableProcessor extends AbstractProcessor {
     // 初始化
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
-        super.init(processingEnv);
+        // IDEA 包装环境解包
+        ProcessingEnvironment unwrappedEnv = jbUnwrap(ProcessingEnvironment.class, processingEnv);
+        super.init(unwrappedEnv);
         this.messager = processingEnv.getMessager();
         this.trees = JavacTrees.instance(processingEnv);
         com.sun.tools.javac.util.Context context = ((com.sun.tools.javac.processing.JavacProcessingEnvironment) processingEnv).getContext();
@@ -74,6 +76,18 @@ public class YiliTableProcessor extends AbstractProcessor {
         this.names = Names.instance(context);
         this.symtab = Symtab.instance(context);
         this.types = Types.instance(context);
+    }
+
+    private static <T> T jbUnwrap(Class<? extends T> iface, T wrapper) {
+        T unwrapped = null;
+        try {
+            final Class<?> apiWrappers = wrapper.getClass().getClassLoader()
+                    .loadClass("org.jetbrains.jps.javac.APIWrappers");
+            final Method unwrapMethod = apiWrappers.getDeclaredMethod("unwrap", Class.class, Object.class);
+            unwrapped = iface.cast(unwrapMethod.invoke(null, iface, wrapper));
+        } catch (Throwable ignored) {
+        }
+        return unwrapped != null ? unwrapped : wrapper;
     }
 
     @Override

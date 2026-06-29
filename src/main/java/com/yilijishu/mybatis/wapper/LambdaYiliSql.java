@@ -1,10 +1,9 @@
 package com.yilijishu.mybatis.wapper;
 
-import com.yilijishu.mybatis.iter.BaseBeanInterface;
 import com.yilijishu.mybatis.wapper.fun.SFunction;
 import com.yilijishu.mybatis.wapper.util.LambdaReflectUtil;
 
-public class LambdaYiliSql<Entity extends BaseBeanInterface, Children extends LambdaYiliSql<Entity, Children>> extends YiliSql<Entity, SFunction<Entity, ?>, Children> {
+public class LambdaYiliSql<Entity, Children extends LambdaYiliSql<Entity, Children>> extends YiliSql<Entity, SFunction<Entity, ?>, Children> {
 
     public LambdaYiliSql(Entity entity) {
         super(entity);

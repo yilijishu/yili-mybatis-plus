@@ -1,35 +1,35 @@
 package com.yilijishu.mybatis.ann;
 
 
-import com.sun.tools.javac.code.*;
-import com.sun.tools.javac.util.*;
-import com.yilijishu.mybatis.constant.Constant;
-import com.yilijishu.mybatis.entity.ComBean;
-import com.yilijishu.mybatis.entity.ComMethod;
 import com.google.auto.service.AutoService;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTrees;
+import com.sun.tools.javac.code.*;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
-import com.yilijishu.utils.CamelUnderUtil;
-import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.ListBuffer;
+import com.sun.tools.javac.util.Names;
+import com.sun.tools.javac.util.Pair;
+import com.yilijishu.mybatis.constant.Constant;
+import com.yilijishu.mybatis.entity.ComBean;
+import com.yilijishu.mybatis.entity.ComMethod;
+import com.yilijishu.mybatis.util.CamelUnderUtil;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.tools.Diagnostic;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 
-@Slf4j
 @AutoService(Processor.class)
 public class YiliTableProcessor extends AbstractProcessor {
 
@@ -38,16 +38,11 @@ public class YiliTableProcessor extends AbstractProcessor {
     private com.sun.tools.javac.api.JavacTrees trees;
     private com.sun.tools.javac.tree.TreeMaker treeMaker;
     private com.sun.tools.javac.util.Names names;
-    private Class<?> supClass;
 
     private com.sun.tools.javac.code.Symtab symtab;
 
     private Types types;
 
-
-    public YiliTableProcessor() {
-        super();
-    }
 
     // 定义需要处理的注解
     @Override
@@ -66,16 +61,41 @@ public class YiliTableProcessor extends AbstractProcessor {
     // 初始化
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
-        // IDEA 包装环境解包
-        ProcessingEnvironment unwrappedEnv = jbUnwrap(ProcessingEnvironment.class, processingEnv);
-        super.init(unwrappedEnv);
+        super.init(processingEnv);
         this.messager = processingEnv.getMessager();
-        this.trees = JavacTrees.instance(processingEnv);
-        com.sun.tools.javac.util.Context context = ((com.sun.tools.javac.processing.JavacProcessingEnvironment) processingEnv).getContext();
-        this.treeMaker = TreeMaker.instance(context);
-        this.names = Names.instance(context);
-        this.symtab = Symtab.instance(context);
-        this.types = Types.instance(context);
+        try {
+            ProcessingEnvironment unwrappedEnv = jbUnwrap(ProcessingEnvironment.class, processingEnv);
+            this.trees = JavacTrees.instance(unwrappedEnv);
+            com.sun.tools.javac.processing.JavacProcessingEnvironment javacEnv
+                    = (com.sun.tools.javac.processing.JavacProcessingEnvironment) unwrappedEnv;
+            com.sun.tools.javac.util.Context context = javacEnv.getContext();
+            this.treeMaker = TreeMaker.instance(context);
+            this.names = Names.instance(context);
+            this.symtab = Symtab.instance(context);
+            this.types = Types.instance(context);
+        } catch (Exception e) {
+            // 解包失败降级使用原生env
+            messager.printMessage(Diagnostic.Kind.WARNING, "解包ProcessingEnvironment失败，使用原生环境:" + e.getMessage());
+            this.trees = JavacTrees.instance(processingEnv);
+            com.sun.tools.javac.processing.JavacProcessingEnvironment javacEnv
+                    = (com.sun.tools.javac.processing.JavacProcessingEnvironment) processingEnv;
+            com.sun.tools.javac.util.Context context = javacEnv.getContext();
+            this.treeMaker = TreeMaker.instance(context);
+            this.names = Names.instance(context);
+            this.symtab = Symtab.instance(context);
+            this.types = Types.instance(context);
+        }
+//        super.init(processingEnv);
+//        // IDEA 包装环境解包
+//        ProcessingEnvironment unwrappedEnv = jbUnwrap(ProcessingEnvironment.class, processingEnv);
+//
+//        this.messager = unwrappedEnv.getMessager();
+//        this.trees = JavacTrees.instance(unwrappedEnv);
+//        com.sun.tools.javac.util.Context context = ((com.sun.tools.javac.processing.JavacProcessingEnvironment) unwrappedEnv).getContext();
+//        this.treeMaker = TreeMaker.instance(context);
+//        this.names = Names.instance(context);
+//        this.symtab = Symtab.instance(context);
+//        this.types = Types.instance(context);
     }
 
     private static <T> T jbUnwrap(Class<? extends T> iface, T wrapper) {
@@ -250,8 +270,8 @@ public class YiliTableProcessor extends AbstractProcessor {
     /**
      * 添加实现接口.
      *
-     * @param jcClassDecl 传递class decl
-     * @param element 传递 element
+     * @param jcClassDecl    传递class decl
+     * @param element        传递 element
      * @param interfaceClass 传递interfaceClass
      */
     public void addTnterface(JCTree.JCClassDecl jcClassDecl, Element element, Class<?> interfaceClass) {
@@ -275,7 +295,6 @@ public class YiliTableProcessor extends AbstractProcessor {
     }
 
 
-    @SneakyThrows
     private ComMethod makeMethodDecl(String supClass, List<JCTree.JCMethodDecl> jcMethodDeclList) {
         messager.printMessage(Diagnostic.Kind.NOTE, "开始执行方法对象");
         ComMethod comMethod = new ComMethod();
@@ -307,16 +326,21 @@ public class YiliTableProcessor extends AbstractProcessor {
             }
         }
         messager.printMessage(Diagnostic.Kind.NOTE, "开始执行超类方法对象");
-        Class<?> clss = Class.forName(supClass);
-        Method[] methods = clss.getMethods();
-        if (methods != null && methods.length > 0) {
-            for (Method method : methods) {
-                OverrideOrderBy orderBy = method.getDeclaredAnnotation(OverrideOrderBy.class);
+        //Class<?> clss = Class.forName(supClass);
+        //替换写法
+        if (supClass != null && supClass.length() > 1) {
+            AptUtil aptUtil = new AptUtil(processingEnv);
+            TypeElement superType = aptUtil.getTypeElement(supClass);
+            java.util.List<ExecutableElement> executableElements = aptUtil.getDeclaredMethods(superType);
+            for (ExecutableElement method : executableElements) {
+                String methodName = method.getSimpleName().toString();
+                // 获取方法上指定注解
+                OverrideOrderBy orderBy = method.getAnnotation(OverrideOrderBy.class);
                 if (orderBy != null && comMethod.isOverrideOrderBy()) {
                     comMethod.setOverrideOrderBy(true);
-                    comMethod.setOverriderOrderByMethod(method.getName());
+                    comMethod.setOverriderOrderByMethod(methodName);
                 }
-                AddSelectCondition addSelectCondition = method.getDeclaredAnnotation(AddSelectCondition.class);
+                AddSelectCondition addSelectCondition = method.getAnnotation(AddSelectCondition.class);
                 if (addSelectCondition != null) {
                     java.util.List<String> selects = comMethod.getAddSelectConditionMethod();
                     if (selects == null) {
@@ -324,7 +348,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                         comMethod.setAddSelectCondition(true);
                         comMethod.setAddSelectConditionMethod(selects);
                     }
-                    selects.add(method.getName());
+                    selects.add(methodName);
                 }
             }
         }
@@ -339,7 +363,6 @@ public class YiliTableProcessor extends AbstractProcessor {
      * @param jcVariableDeclList 类中的所有属性
      * @return 返回method
      */
-    @SneakyThrows
     private java.util.List<ComBean> makeColumnNamesMethodDecl(String supClass, List<JCTree.JCVariableDecl> jcVariableDeclList) {
         messager.printMessage(Diagnostic.Kind.NOTE, "执行makeColumnNamesMethodDecl");
         java.util.List<ComBean> comBeans = null;
@@ -454,89 +477,101 @@ public class YiliTableProcessor extends AbstractProcessor {
                 }
             }
         }
-        Class<?> clss = Class.forName(supClass);
-        Field[] fields = clss.getDeclaredFields();
+//        Class<?> clss = Class.forName(supClass);
+//        Field[] fields = clss.getDeclaredFields();
+        //替换
+        if (supClass != null && supClass.length() > 1) {
+            AptUtil aptUtil = new AptUtil(processingEnv);
+            TypeElement typeElement = aptUtil.getTypeElement(supClass);
+            java.util.List<VariableElement> variableElements = aptUtil.getDeclaredFields(typeElement);
+            for (VariableElement field : variableElements) {
+                // 字段名
+                String fieldName = field.getSimpleName().toString();
+                // 字段类型
+                String fieldType = field.asType().toString();
 
-        for (Field field : fields) {
-            ComBean comBean = new ComBean();
-            comBeans.add(comBean);
-            comBean.setName(field.getName());
+                ComBean comBean = new ComBean();
+                comBeans.add(comBean);
+                comBean.setName(fieldName);
+                comBean.setDefTypeColumn(fieldType);
+                DelTag delTag = field.getAnnotation(DelTag.class);
+                if (delTag != null) {
+                    comBean.setDelTag(true);
+                    comBean.setDelTagValue(delTag.value());
+                }
 
-            DelTag delTag = field.getDeclaredAnnotation(DelTag.class);
-            if(delTag != null) {
-                comBean.setDelTag(true);
-                comBean.setDelTagValue(delTag.value());
-            }
+                AutoCreateTime autoCreateTime = field.getAnnotation(AutoCreateTime.class);
+                if (autoCreateTime != null) {
+                    comBean.setAutoCreateTime(true);
+                }
 
-            AutoCreateTime autoCreateTime = field.getDeclaredAnnotation(AutoCreateTime.class);
-            if(autoCreateTime != null) {
-                comBean.setAutoCreateTime(true);
-            }
+                VirtualTableId virtualTableId = field.getAnnotation(VirtualTableId.class);
+                if (virtualTableId != null) {
+                    comBean.setVirtualTableId(true);
+                }
+                AutoModifyTime autoModifyTime = field.getAnnotation(AutoModifyTime.class);
+                if (autoModifyTime != null) {
+                    comBean.setAutoModifyTime(true);
+                }
 
-            VirtualTableId virtualTableId = field.getDeclaredAnnotation(VirtualTableId.class);
-            if(virtualTableId != null) {
-                comBean.setVirtualTableId(true);
-            }
-            AutoModifyTime autoModifyTime = field.getDeclaredAnnotation(AutoModifyTime.class);
-            if(autoModifyTime != null) {
-                comBean.setAutoModifyTime(true);
-            }
+                ColumnType columnType = field.getAnnotation(ColumnType.class);
+                if (columnType != null) {
+                    comBean.setColumnType(columnType.value());
+                }
+                ColumnNotNull columnNotNull = field.getAnnotation(ColumnNotNull.class);
+                if (columnNotNull != null) {
+                    comBean.setNotNull(true);
+                }
 
-            ColumnType columnType = field.getDeclaredAnnotation(ColumnType.class);
-            if(columnType != null) {
-                comBean.setColumnType(columnType.value());
-            }
-            ColumnNotNull columnNotNull = field.getDeclaredAnnotation(ColumnNotNull.class);
-            if(columnNotNull != null) {
-                comBean.setNotNull(true);
-            }
-            comBean.setDefTypeColumn(field.getGenericType().getTypeName());
-            // 获取属性名
-            IgnoreColumn ignoreColumn = field.getDeclaredAnnotation(IgnoreColumn.class);
-            if (ignoreColumn != null) {
-                comBean.setIgnore(true);
-            }
-            IgnoreInsertColumn ignoreInsertColumn = field.getDeclaredAnnotation(IgnoreInsertColumn.class);
-            if (ignoreInsertColumn != null) {
-                comBean.setIgnoreInsert(true);
-            }
-            IfFieldCondition ifFieldCondition = field.getDeclaredAnnotation(IfFieldCondition.class);
-            if (ifFieldCondition != null) {
-                comBean.setIfFieldCondition(true);
-                comBean.setIfFieldConditionName(ifFieldCondition.value());
-            }
-            TableId tableId = field.getDeclaredAnnotation(TableId.class);
-            if (tableId != null) {
-                comBean.setTableId(true);
-            }
-            Column column = field.getDeclaredAnnotation(Column.class);
-            OrderBy orderBy = field.getDeclaredAnnotation(OrderBy.class);
-            DefWhere defWhere = field.getDeclaredAnnotation(DefWhere.class);
-            if (defWhere != null) {
-                comBean.setDefWhere(true);
-                comBean.setDefWhereValue(defWhere.value());
+                // 获取属性名
+                IgnoreColumn ignoreColumn = field.getAnnotation(IgnoreColumn.class);
+                if (ignoreColumn != null) {
+                    comBean.setIgnore(true);
+                }
+                IgnoreInsertColumn ignoreInsertColumn = field.getAnnotation(IgnoreInsertColumn.class);
+                if (ignoreInsertColumn != null) {
+                    comBean.setIgnoreInsert(true);
+                }
+                IfFieldCondition ifFieldCondition = field.getAnnotation(IfFieldCondition.class);
+                if (ifFieldCondition != null) {
+                    comBean.setIfFieldCondition(true);
+                    comBean.setIfFieldConditionName(ifFieldCondition.value());
+                }
+                TableId tableId = field.getAnnotation(TableId.class);
+                if (tableId != null) {
+                    comBean.setTableId(true);
+                }
+                Column column = field.getAnnotation(Column.class);
+                OrderBy orderBy = field.getAnnotation(OrderBy.class);
+                DefWhere defWhere = field.getAnnotation(DefWhere.class);
+                if (defWhere != null) {
+                    comBean.setDefWhere(true);
+                    comBean.setDefWhereValue(defWhere.value());
 
+                }
+                if (column != null) {
+                    comBean.setColumn(true);
+                    comBean.setColumValue(column.value());
+                }
+                if (orderBy != null) {
+                    comBean.setOrderBy(true);
+                    comBean.setOrderByVal(orderBy.value());
+                    comBean.setOrder(orderBy.order());
+                }
+
+                messager.printMessage(Diagnostic.Kind.NOTE, "字段信息: " + comBean);
             }
-            if (column != null) {
-                comBean.setColumn(true);
-                comBean.setColumValue(column.value());
-            }
-            if (orderBy != null) {
-                comBean.setOrderBy(true);
-                comBean.setOrderByVal(orderBy.value());
-                comBean.setOrder(orderBy.order());
-            }
-            messager.printMessage(Diagnostic.Kind.NOTE, "字段信息: " + comBean);
         }
+
         return comBeans;
     }
 
     /**
      * 加载数据、生成方法.
      *
-     * @param comBeans 传递Combean列表
-     * @param element element对象
-     * @param table 表名
+     * @param comBeans  传递Combean列表
+     * @param element   element对象
+     * @param table     表名
      * @param comMethod 传递自定义方法
      * @return 方法定义列表
      */
@@ -570,7 +605,7 @@ public class YiliTableProcessor extends AbstractProcessor {
         if (table.value() != null && !"".equals(table.value())) {
             tableStr.append(Constant.escape(table.value()));
         } else {
-            tableStr.append(CamelUnderUtil.underName(Constant.escape(element.getSimpleName().toString())));
+            tableStr.append(Constant.escape(CamelUnderUtil.underName(element.getSimpleName().toString())));
         }
 
         sqlType.append(Constant.dataBase.name());
@@ -601,7 +636,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                     insertColumns.append(Constant.escape(columnName));
 
                     //判断是否为默认创建时间
-                    if(!comBean.isAutoCreateTime()) {
+                    if (!comBean.isAutoCreateTime()) {
                         insertNames2.append(",#{");
                         insertNames2.append(PARAM_OBJECT);
                         insertNames2.append(name);
@@ -618,7 +653,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                             }
                         }
                     }
-                    if(!comBean.isAutoCreateTime()) {
+                    if (!comBean.isAutoCreateTime()) {
                         insertNames3.append(",#'{'list[{0}].");
                         insertNames3.append(name);
                         insertNames3.append("}");
@@ -643,7 +678,7 @@ public class YiliTableProcessor extends AbstractProcessor {
 
                 createBuffer.append(Constant.SPACE);
                 createBuffer.append(columnName);
-                if(StringUtils.isNotBlank(comBean.getColumnType())) {
+                if (comBean.getColumnType() != null && !"".equals(comBean.getColumnType())) {
                     createBuffer.append(Constant.SPACE);
                     createBuffer.append(comBean.getColumnType());
                     createBuffer.append(Constant.SPACE);
@@ -823,7 +858,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                 }
 
 
-                if(comBean.isTableId()) {
+                if (comBean.isTableId()) {
                     switch (Constant.dataBase) {
                         case SQLSERVER: {
                             createBuffer.append(" IDENTITY(1,1) PRIMARY KEY ");
@@ -844,7 +879,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                     }
 
                 }
-                if(comBean.getNotNull() || comBean.isVirtualTableId()) {
+                if (comBean.getNotNull() || comBean.isVirtualTableId()) {
                     createBuffer.append(" not null");
                 }
 
@@ -872,8 +907,8 @@ public class YiliTableProcessor extends AbstractProcessor {
                 } else if (!comBean.isVirtualTableId()) {
 
 
-                    if(!comBean.isAutoCreateTime()) {
-                        if(!comBean.isAutoModifyTime()) {
+                    if (!comBean.isAutoCreateTime()) {
+                        if (!comBean.isAutoModifyTime()) {
                             updateSetStatement.append(treeMaker.If(
                                     treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(name, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
                                     treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + Constant.escape(columnName) + " = #{" + PARAM_OBJECT + name + "} " + ","))),
@@ -904,13 +939,13 @@ public class YiliTableProcessor extends AbstractProcessor {
                             comBean.isIfFieldCondition() ? treeMaker.If(
                                     treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString(comBean.getIfFieldConditionName())), List.nil()),
                                     treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and " + Constant.escape(columnName) + " = #{" + PARAM_OBJECT + name + "} "))), null)
-                                    : treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and "+ Constant.escape(columnName) + " = #{" + PARAM_OBJECT + name + "} "))),
+                                    : treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal(" and " + Constant.escape(columnName) + " = #{" + PARAM_OBJECT + name + "} "))),
                             null));
                 }
                 if (comBean.isOrderBy()) {
                     orderByList.add(comBean);
                 }
-                if(comBean.isDelTag()) {
+                if (comBean.isDelTag()) {
                     genDelTag = true;
                     genDelTagBuffer.append(columnName);
                     genDelTagValueBuffer.append(comBean.getDelTagValue());
@@ -959,10 +994,10 @@ public class YiliTableProcessor extends AbstractProcessor {
 //            //updateWhere.append(tmp);
 //        }
 
-        if (StringUtils.isNotBlank(tableIdVal)) {
+        if (tableIdVal != null && !"".equals(tableIdVal)) {
             updateWhereStatement.append(treeMaker.If(treeMaker.Binary(JCTree.Tag.NE, treeMaker.Apply(List.nil(), treeMaker.Select(treeMaker.Ident(names.fromString("this")), names.fromString("get" + CamelUnderUtil.camelName(tableIdVal, true))), List.nil()), treeMaker.Literal(TypeTag.BOT, null)),
-                    treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  "+ Constant.escape( tableIdColumnVal) + " = #{" + PARAM_OBJECT + tableIdVal + "} "))),
-                    StringUtils.isNotBlank(virtualTableId) ? treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  "+ Constant.escape(virtualTableIdColumn) + " = #{" + PARAM_OBJECT + virtualTableId + "} "))) : null
+                    treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + Constant.escape(tableIdColumnVal) + " = #{" + PARAM_OBJECT + tableIdVal + "} "))),
+                    virtualTableId != null && !"".equals(virtualTableId) ? treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + Constant.escape(virtualTableIdColumn) + " = #{" + PARAM_OBJECT + virtualTableId + "} "))) : null
             ));
         }
 
@@ -977,14 +1012,14 @@ public class YiliTableProcessor extends AbstractProcessor {
         results.add(buildMethod("baseGenInsertListNames", insertNames3.toString().substring(1)));
 
         results.add(buildMethod("baseSqlDatabase", sqlType.toString()));
-        results.add(buildMethod("baseCreateTable", createBuffer.toString().substring(0, createBuffer.length()-1)));
+        results.add(buildMethod("baseCreateTable", createBuffer.toString().substring(0, createBuffer.length() - 1)));
 
         //results.add(buildMethod("baseGenUpdateWhere", updateWhere.toString()));
         results.add(buildMethod("baseGenDefWhere", defWhere.toString()));
         results.add(buildMethod("baseGenId", tableId.toString()));
         results.add(buildMethod("baseGenVirtualId", virTableId.toString()));
         results.add(buildMethod("genDelTag", genDelTag));
-        if(genDelTag) {
+        if (genDelTag) {
             results.add(buildMethod("genDelTagColumn", genDelTagBuffer.toString()));
             results.add(buildMethod("genDelTagValue", genDelTagValueBuffer.toString()));
         }
@@ -1029,7 +1064,7 @@ public class YiliTableProcessor extends AbstractProcessor {
     /**
      * 生成方法（方法名， 步骤）
      *
-     * @param method 要生成的名法名
+     * @param method     要生成的名法名
      * @param statements 声明代码树列表
      * @return 返回方法声明
      */
@@ -1040,7 +1075,7 @@ public class YiliTableProcessor extends AbstractProcessor {
     /**
      * 生成方法（方法名， 步骤）
      *
-     * @param method 要生成的名法名
+     * @param method     要生成的名法名
      * @param statements 声明代码树列表
      * @param returnType 设定返回类型
      * @return 返回方法声明
@@ -1059,7 +1094,7 @@ public class YiliTableProcessor extends AbstractProcessor {
      * 生成返回String的方法（方法名， 字符串）
      *
      * @param method 方法名
-     * @param str 返回的字符串
+     * @param str    返回的字符串
      * @return 返回方法声明
      */
     public JCTree.JCMethodDecl buildMethod(String method, String str) {
@@ -1077,7 +1112,7 @@ public class YiliTableProcessor extends AbstractProcessor {
      * 生成返回boolean方法（方法名， 字符串）
      *
      * @param method 方法名
-     * @param bool 是否
+     * @param bool   是否
      * @return 返回方法声明
      */
     public JCTree.JCMethodDecl buildMethod(String method, boolean bool) {

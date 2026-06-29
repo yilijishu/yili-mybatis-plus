@@ -7,6 +7,7 @@ com/yilijishu/mybatis/ann/YiliTableProcessor$1.class
 com/yilijishu/mybatis/entity/ComBean.class
 com/yilijishu/mybatis/service/StandardWeb.class
 com/yilijishu/mybatis/wapper/DeleteSql.class
+com/yilijishu/mybatis/entity/PageData.class
 com/yilijishu/mybatis/ann/IgnoreColumn.class
 com/yilijishu/mybatis/entity/Page.class
 com/yilijishu/mybatis/wapper/QueryConditions$1.class
@@ -56,5 +57,7 @@ com/yilijishu/mybatis/ann/AutoModifyTime.class
 com/yilijishu/mybatis/wapper/YiliBaseSql.class
 com/yilijishu/mybatis/ann/Column.class
 com/yilijishu/mybatis/ann/DelTag.class
+com/yilijishu/mybatis/ann/AptUtil.class
 com/yilijishu/mybatis/ann/IgnoreInsertColumn.class
 com/yilijishu/mybatis/wapper/LambdaDeleteSql.class
+com/yilijishu/mybatis/util/CamelUnderUtil.class

@@ -1,11 +1,7 @@
 package com.yilijishu.mybatis.mapper;
 
 import com.yilijishu.mybatis.entity.Page;
-import com.yilijishu.mybatis.iter.BaseBeanInterface;
 import com.yilijishu.mybatis.mapper.provider.BaseSqlProvider;
-import com.yilijishu.mybatis.wapper.DeleteSql;
-import com.yilijishu.mybatis.wapper.QuerySql;
-import com.yilijishu.mybatis.wapper.UpdateSql;
 import com.yilijishu.mybatis.wapper.YiliBaseSql;
 import org.apache.ibatis.annotations.*;
 
@@ -13,7 +9,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Mapper
-public interface BaseMapper<T extends BaseBeanInterface> {
+public interface BaseMapper<T> {
 
     String PARAM_PAGE = "page";
     String PARAM_OBJECT = "p";
@@ -76,8 +72,11 @@ public interface BaseMapper<T extends BaseBeanInterface> {
      * @param page 分页
      * @return 返回集合
      */
+    @SelectProvider(method = "selectPage", type = BaseSqlProvider.class)
+    List<T> selectPage(@Param(PARAM_OBJECT) T p, @Param(PARAM_PAGE) Page page);
+
     @SelectProvider(method = "select", type = BaseSqlProvider.class)
-    List<T> select(@Param(PARAM_OBJECT) T p, @Param(PARAM_PAGE) Page page);
+    List<T> select(@Param(PARAM_OBJECT) T p);
 
     /**
      * 获取数据

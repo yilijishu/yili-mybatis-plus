@@ -1,13 +1,12 @@
 package com.yilijishu.mybatis.wapper;
 
-import java.util.HashMap;
-import java.util.function.Supplier;
-import com.yilijishu.mybatis.iter.BaseBeanInterface;
 import com.yilijishu.mybatis.wapper.fun.SFunction;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
-public class LambdaUpdateSql<Entity extends BaseBeanInterface> extends LambdaYiliSql<Entity, LambdaUpdateSql<Entity>>
+public class LambdaUpdateSql<Entity> extends LambdaYiliSql<Entity, LambdaUpdateSql<Entity>>
         implements UpdateInterface<Entity> {
 
     private Map<String, Object> set;

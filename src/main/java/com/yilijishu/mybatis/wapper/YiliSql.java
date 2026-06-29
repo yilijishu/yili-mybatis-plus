@@ -2,13 +2,12 @@ package com.yilijishu.mybatis.wapper;
 
 import com.yilijishu.mybatis.ann.SetDataBase;
 import com.yilijishu.mybatis.constant.Constant;
-import com.yilijishu.mybatis.iter.BaseBeanInterface;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliSql<Entity, B, Children>> extends YiliBaseSql<Entity> {
+public class YiliSql<Entity, B, Children extends YiliSql<Entity, B, Children>> extends YiliBaseSql<Entity> {
 
     protected final Children child = (Children) this;
     protected Entity entity;
@@ -26,7 +25,7 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
         this.entity = entity;
         this.where = new ArrayList<>();
         if (Constant.dataBase == null) {
-            Constant.dataBase = SetDataBase.DataBaseEnum.convert(entity.baseSqlDatabase());
+            Constant.dataBase = SetDataBase.DataBaseEnum.convert(getBaseBeanInterface().baseSqlDatabase());
         }
     }
 
@@ -74,7 +73,7 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
      * @param condition 判断条件 为 true 则 应用。fasle 则不使用
      * @param column    字段名
      * @param data      列表
-     * @return  返回子类
+     * @return 返回子类
      */
 
     public Children in(boolean condition, B column, List data) {
@@ -484,7 +483,8 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * AND
-     * @return  返回子类
+     *
+     * @return 返回子类
      */
     public Children and() {
         where.add(new QueryAndOrConditions(SqlKey.AND));
@@ -493,8 +493,9 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * AND， 多语句
+     *
      * @param c 子类
-     * @return  返回子类
+     * @return 返回子类
      */
     public Children and(Children c) {
         where.add(new QueryAndOrConditions(SqlKey.AND, c.getWhere()));
@@ -503,8 +504,9 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * AND 多语句
+     *
      * @param condition 条件
-     * @param c  子类
+     * @param c         子类
      * @return 返回子类
      */
     public Children and(boolean condition, Children c) {
@@ -516,6 +518,7 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * OR
+     *
      * @return 返回子类
      */
     public Children or() {
@@ -525,6 +528,7 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * OR 多语句
+     *
      * @param c 子类
      * @return 返回子类
      */
@@ -535,8 +539,9 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * OR 多语句
+     *
      * @param condition 条件
-     * @param c 子类
+     * @param c         子类
      * @return 返回子类
      */
     public Children or(boolean condition, Children c) {
@@ -548,6 +553,7 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * group by
+     *
      * @param column 字段数组
      * @return 返回子类
      */
@@ -558,8 +564,9 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * group by
+     *
      * @param condition 条件
-     * @param column 字段数组
+     * @param column    字段数组
      * @return 返回子类
      */
     public Children groupBy(boolean condition, B... column) {
@@ -568,8 +575,10 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
         }
         return this.child;
     }
+
     /**
      * having
+     *
      * @param c 字段
      * @return 返回子类
      */
@@ -580,8 +589,9 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * having
-     * @param condition  条件 是否真
-     * @param c 字段
+     *
+     * @param condition 条件 是否真
+     * @param c         字段
      * @return 返回子类
      */
     public Children having(boolean condition, Children c) {
@@ -593,11 +603,12 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * order by desc
+     *
      * @param column 字段
      * @return 返回子类
      */
     public Children orderByDesc(B column) {
-        if(orderBy == null) {
+        if (orderBy == null) {
             orderBy = new ArrayList<>();
             where.add(new OrderByConditions(SqlKey.ORDER_BY, orderBy));
         }
@@ -607,12 +618,13 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * order by desc
-     * @param condition  条件 是否真
-     * @param column 字段
+     *
+     * @param condition 条件 是否真
+     * @param column    字段
      * @return 返回子类
      */
     public Children orderByDesc(boolean condition, B column) {
-        if(condition) {
+        if (condition) {
             return orderByDesc(column);
         }
         return this.child;
@@ -620,11 +632,12 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * order by  asc
+     *
      * @param column 字段
      * @return 返回子类
      */
     public Children orderByAsc(B column) {
-        if(orderBy == null) {
+        if (orderBy == null) {
             orderBy = new ArrayList<>();
             where.add(new OrderByConditions(SqlKey.ORDER_BY, orderBy));
         }
@@ -634,12 +647,13 @@ public class YiliSql<Entity extends BaseBeanInterface, B, Children extends YiliS
 
     /**
      * order by asc
-     * @param condition  条件 是否真
-     * @param column 字段
+     *
+     * @param condition 条件 是否真
+     * @param column    字段
      * @return 返回子类
      */
     public Children orderByAsc(boolean condition, B column) {
-        if(condition) {
+        if (condition) {
             return orderByAsc(column);
         }
         return this.child;

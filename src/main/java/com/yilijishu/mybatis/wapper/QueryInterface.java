@@ -4,7 +4,7 @@ import com.yilijishu.mybatis.iter.BaseBeanInterface;
 
 import java.util.List;
 
-public interface QueryInterface<Entity extends BaseBeanInterface> {
+public interface QueryInterface<Entity> {
 
     String getSql();
 
@@ -21,11 +21,15 @@ public interface QueryInterface<Entity extends BaseBeanInterface> {
                 stringBuffer.append(getSelect().get(i));
             }
         } else {
-            stringBuffer.append(entity.baseGenColumnNames());
+            stringBuffer.append(getBaseBeanInterface(entity).baseGenColumnNames());
         }
         stringBuffer.append(" FROM ");
-        stringBuffer.append(entity.baseGenTable());
+        stringBuffer.append(getBaseBeanInterface(entity).baseGenTable());
         stringBuffer.append(getSql());
         return stringBuffer.toString();
+    }
+
+    default BaseBeanInterface getBaseBeanInterface(Entity entity) {
+        return (BaseBeanInterface) entity;
     }
 }

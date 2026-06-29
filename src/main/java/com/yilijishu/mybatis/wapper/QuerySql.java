@@ -1,13 +1,11 @@
 package com.yilijishu.mybatis.wapper;
 
 
-import com.yilijishu.mybatis.iter.BaseBeanInterface;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class QuerySql<Entity extends BaseBeanInterface> extends YiliSql<Entity, String, QuerySql<Entity>>
+public class QuerySql<Entity> extends YiliSql<Entity, String, QuerySql<Entity>>
         implements QueryInterface<Entity> {
 
     private List<String> select;

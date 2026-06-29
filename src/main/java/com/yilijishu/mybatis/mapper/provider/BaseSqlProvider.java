@@ -115,7 +115,7 @@ public class BaseSqlProvider {
     /**
      * 判断是否不为空修改语句组装
      *
-     * @param p
+     * @param p 为空不修改
      * @param <T> 范型
      * @return 返回sql
      */
@@ -180,7 +180,7 @@ public class BaseSqlProvider {
      * @return 返回sql
      */
     @SneakyThrows
-    public <T extends BaseBeanInterface> String select(@Param(PARAM_OBJECT) T p, @Param(PARAM_PAGE) Page page) {
+    public <T extends BaseBeanInterface> String selectPage(@Param(PARAM_OBJECT) T p, @Param(PARAM_PAGE) Page page) {
         setDb(p);
         StringBuffer sbf = new StringBuffer();
         sbf.append(" SELECT ");
@@ -193,6 +193,28 @@ public class BaseSqlProvider {
         if (page != null) {
             sbf.append(Constant.limitEscape(page.getStart().toString(), page.getPageSize().toString()));
         }
+        return sbf.toString();
+    }
+
+
+    /**
+     * 查询语句组装
+     *
+     * @param p    实例
+     * @param <T> 范型
+     * @return 返回sql
+     */
+    @SneakyThrows
+    public <T extends BaseBeanInterface> String select(@Param(PARAM_OBJECT) T p) {
+        setDb(p);
+        StringBuffer sbf = new StringBuffer();
+        sbf.append(" SELECT ");
+        sbf.append(p.baseGenColumnNames());
+        sbf.append(" FROM ");
+        sbf.append(p.baseGenTable());
+        sbf.append(p.baseGenDefWhere());
+        sbf.append(p.baseGenSelectWhere());
+        sbf.append(p.baseGenOrderBy());
         return sbf.toString();
     }
 

@@ -1,6 +1,7 @@
 package com.yilijishu.mybatis.service.impl;
 
 import com.yilijishu.mybatis.entity.Page;
+import com.yilijishu.mybatis.entity.PageData;
 import com.yilijishu.mybatis.iter.BaseBeanInterface;
 import com.yilijishu.mybatis.manager.BaseManager;
 import com.yilijishu.mybatis.service.BaseService;
@@ -10,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -28,7 +28,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer insert(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.insert((BaseBeanInterface) p);
+        return baseManager.insert(p);
     }
 
     /**
@@ -53,7 +53,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer update(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.update((BaseBeanInterface)p);
+        return baseManager.update(p);
     }
 
     /**
@@ -65,7 +65,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer updateIfNot(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.updateNotIfNull((BaseBeanInterface)p);
+        return baseManager.updateNotIfNull(p);
     }
 
 
@@ -78,7 +78,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer delete(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.delete((BaseBeanInterface)p);
+        return baseManager.delete(p);
 
     }
 
@@ -92,7 +92,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer deleteByIds(Object p, List ids) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.deleteByIds((BaseBeanInterface)p, ids);
+        return baseManager.deleteByIds(p, ids);
     }
 
     /**
@@ -105,7 +105,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Integer deleteByVirtualIds(Object p, List ids) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.deleteByVirtualIds((BaseBeanInterface)p, ids);
+        return baseManager.deleteByVirtualIds(p, ids);
     }
 
     /**
@@ -166,13 +166,9 @@ public class BaseServiceImpl implements BaseService {
      * @return 返回集合数据
      */
     @Override
-    public List<Object> selectByPage(Object p, Page page) {
+    public PageData<List<Object>> selectByPage(Object p, Page page) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        page.setCount(baseManager.count((BaseBeanInterface)p));
-        if (page.isQuery()) {
-            return baseManager.select((BaseBeanInterface)p, page);
-        }
-        return new ArrayList<>();
+        return baseManager.selectPage(p, page);
     }
 
     /**
@@ -184,7 +180,7 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public List<Object> select(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.select((BaseBeanInterface)p);
+        return baseManager.select(p);
     }
 
     /**
@@ -196,6 +192,6 @@ public class BaseServiceImpl implements BaseService {
     @Override
     public Object get(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.get((BaseBeanInterface)p);
+        return baseManager.get(p);
     }
 }

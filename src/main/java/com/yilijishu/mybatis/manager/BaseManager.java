@@ -1,7 +1,7 @@
 package com.yilijishu.mybatis.manager;
 
 import com.yilijishu.mybatis.entity.Page;
-import com.yilijishu.mybatis.iter.BaseBeanInterface;
+import com.yilijishu.mybatis.entity.PageData;
 import com.yilijishu.mybatis.mapper.BaseMapper;
 import com.yilijishu.mybatis.wapper.YiliBaseSql;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.Collection;
 import java.util.List;
 
-public class BaseManager<T extends BaseBeanInterface, TB extends BaseMapper<T>> {
+public class BaseManager<T, TB extends BaseMapper<T>> {
     //-----------------------------------------标准产物START-----------------------------------------
     @Autowired
     protected TB mapper;
@@ -31,15 +31,15 @@ public class BaseManager<T extends BaseBeanInterface, TB extends BaseMapper<T>> 
     }
 
     public List<T> select(T p) {
-        return mapper.select(p, null);
+        return mapper.select(p);
     }
 
-    public List<T> select(T p, Page page) {
+    public PageData<List<T>> selectPage(T p, Page page) {
         page.setCount(count(p));
         if (page.isQuery()) {
-            return mapper.select(p, page);
+            return new PageData<>(mapper.selectPage(p, page), page);
         } else {
-            return null;
+            return new PageData<>(null, page);
         }
     }
 

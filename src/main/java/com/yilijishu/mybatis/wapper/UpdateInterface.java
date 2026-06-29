@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public interface UpdateInterface<Entity extends BaseBeanInterface> {
+public interface UpdateInterface<Entity> {
 
 
     String getSql();
@@ -18,7 +18,7 @@ public interface UpdateInterface<Entity extends BaseBeanInterface> {
     default String toSql(Entity entity) {
         StringBuilder result = new StringBuilder();
         result.append(" UPDATE ");
-        result.append(entity.baseGenTable());
+        result.append(getBaseBeanInterface(entity).baseGenTable());
         result.append(" SET ");
         AtomicInteger index = new AtomicInteger(0);
         getMap().forEach((k, v) -> {
@@ -31,7 +31,7 @@ public interface UpdateInterface<Entity extends BaseBeanInterface> {
             result.append(Constant.convertObject(v));
         });
         String w = getSql();
-        if(StringUtils.isNotBlank(w)) {
+        if (StringUtils.isNotBlank(w)) {
             result.append(w);
         } else {
             throw new BizException("禁止全局修改");
@@ -39,4 +39,8 @@ public interface UpdateInterface<Entity extends BaseBeanInterface> {
         return result.toString();
     }
 
+
+    default BaseBeanInterface getBaseBeanInterface(Entity entity) {
+        return (BaseBeanInterface) entity;
+    }
 }

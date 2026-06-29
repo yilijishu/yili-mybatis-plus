@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UpdateSql<Entity extends BaseBeanInterface> extends YiliSql<Entity, String, UpdateSql<Entity>>
+public class UpdateSql<Entity> extends YiliSql<Entity, String, UpdateSql<Entity>>
         implements UpdateInterface<Entity> {
 
     private Map<String, Object> set;

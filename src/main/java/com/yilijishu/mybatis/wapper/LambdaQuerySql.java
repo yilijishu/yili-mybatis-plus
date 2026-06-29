@@ -1,6 +1,5 @@
 package com.yilijishu.mybatis.wapper;
 
-import com.yilijishu.mybatis.iter.BaseBeanInterface;
 import com.yilijishu.mybatis.wapper.fun.SFunction;
 
 import java.util.ArrayList;
@@ -8,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 
-public class LambdaQuerySql<Entity extends BaseBeanInterface> extends LambdaYiliSql<Entity, LambdaQuerySql<Entity>>
+public class LambdaQuerySql<Entity> extends LambdaYiliSql<Entity, LambdaQuerySql<Entity>>
         implements QueryInterface<Entity> {
     private List<String> select;
 

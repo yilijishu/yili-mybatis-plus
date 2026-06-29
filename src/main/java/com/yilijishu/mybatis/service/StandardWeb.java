@@ -3,6 +3,7 @@ package com.yilijishu.mybatis.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.yilijishu.mybatis.entity.Page;
+import com.yilijishu.mybatis.entity.PageData;
 import com.yilijishu.utils.CamelUnderUtil;
 import com.yilijishu.utils.exceptions.BizException;
 import com.yilijishu.utils.result.ApiResult;
@@ -238,11 +239,8 @@ public class StandardWeb {
                         throw new BizException("无效的数据格式");
                     }
                     Page page = new Page(start, size);
-                    List list = baseService.selectByPage(obj, page);
-                    Map<String, Object> result = new HashMap<>();
-                    result.put("page", page);
-                    result.put("data", list);
-                    return ApiResult.resultSuccess(result);
+                    PageData<List<Object>> list = baseService.selectByPage(obj, page);
+                    return ApiResult.resultSuccess(list);
                 }
                 default: {
                     throw new BizException("无效的请求");

@@ -1,6 +1,7 @@
 package com.yilijishu.mybatis.service;
 
 import com.yilijishu.mybatis.entity.Page;
+import com.yilijishu.mybatis.entity.PageData;
 
 import java.util.List;
 
@@ -71,7 +72,7 @@ public interface BaseService {
      * @param page 分页类
      * @return 返回集合数据
      */
-    List<Object> selectByPage(Object p, Page page);
+    PageData<List<Object>> selectByPage(Object p, Page page);
     /**
      * 查询数据【遵循标准排序】
      * @param p 实体类

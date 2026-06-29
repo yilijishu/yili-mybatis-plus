@@ -1,10 +1,8 @@
 package com.yilijishu.mybatis.wapper;
 
-import com.yilijishu.mybatis.iter.BaseBeanInterface;
-
 import java.util.function.Supplier;
 
-public class LambdaDeleteSql<Entity extends BaseBeanInterface> extends LambdaYiliSql<Entity, LambdaDeleteSql<Entity>>
+public class LambdaDeleteSql<Entity> extends LambdaYiliSql<Entity, LambdaDeleteSql<Entity>>
         implements DeleteInterface<Entity> {
 
     public LambdaDeleteSql(Supplier<Entity> suppliery) {

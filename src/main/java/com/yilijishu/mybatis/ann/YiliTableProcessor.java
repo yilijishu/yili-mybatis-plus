@@ -16,6 +16,7 @@ import com.yilijishu.mybatis.constant.Constant;
 import com.yilijishu.mybatis.entity.ComBean;
 import com.yilijishu.mybatis.entity.ComMethod;
 import com.yilijishu.mybatis.util.CamelUnderUtil;
+import org.apache.ibatis.type.TypeHandler;
 
 import javax.annotation.processing.*;
 import javax.lang.model.SourceVersion;
@@ -373,7 +374,6 @@ public class YiliTableProcessor extends AbstractProcessor {
                 comBeans.add(comBean);
                 comBean.setName(jcVariableDecl.getName().toString());
                 comBean.setDefTypeColumn(jcVariableDecl.vartype.type.tsym.getQualifiedName().toString());
-
                 // 获取属性名
                 for (JCTree.JCAnnotation an : jcVariableDecl.mods.getAnnotations()) {
                     switch (an.getAnnotationType().type.toString()) {
@@ -406,7 +406,12 @@ public class YiliTableProcessor extends AbstractProcessor {
                                 if ("value()".equals(a.fst.toString())) {
                                     String tmp = a.snd.getValue().toString();
                                     comBean.setColumValue(tmp);
+                                } else if("typeHandler()".equals(a.fst.toString())) {
+                                    Class<?> cls = (Class<? extends TypeHandler>)a.snd.getValue();
+                                    comBean.setHandler(true);
+                                    comBean.setHandlerStr(cls.getName());
                                 }
+
                             }
                             break;
                         }
@@ -552,6 +557,11 @@ public class YiliTableProcessor extends AbstractProcessor {
                 if (column != null) {
                     comBean.setColumn(true);
                     comBean.setColumValue(column.value());
+                    Class<?> cls = column.typeHandler();
+                    if(cls != null) {
+                        comBean.setHandler(true);
+                        comBean.setHandlerStr(cls.getName());
+                    }
                 }
                 if (orderBy != null) {
                     comBean.setOrderBy(true);
@@ -640,6 +650,10 @@ public class YiliTableProcessor extends AbstractProcessor {
                         insertNames2.append(",#{");
                         insertNames2.append(PARAM_OBJECT);
                         insertNames2.append(name);
+                        if(comBean.isHandler()) {
+                            insertNames2.append(", typeHandler=");
+                            insertNames2.append(comBean.getHandlerStr());
+                        }
                         insertNames2.append("}");
                     } else {
                         switch (Constant.dataBase) {
@@ -656,18 +670,14 @@ public class YiliTableProcessor extends AbstractProcessor {
                     if (!comBean.isAutoCreateTime()) {
                         insertNames3.append(",#'{'list[{0}].");
                         insertNames3.append(name);
+                        if(comBean.isHandler()) {
+                            insertNames2.append(", typeHandler=");
+                            insertNames2.append(comBean.getHandlerStr());
+                        }
                         insertNames3.append("}");
                     } else {
-                        switch (Constant.dataBase) {
-                            case ORACLE: {
-                                insertNames3.append(",SYSDATE");
-                                break;
-                            }
-                            default: {
-                                insertNames3.append(",NOW()");
-                                break;
-                            }
-                        }
+
+                        insertNames3.append("," + Constant.escapeDate());
                     }
 
                 }
@@ -838,6 +848,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                             break;
                         }
                         default: {
+
                             switch (Constant.dataBase) {
                                 case POSTGRESQL: {
                                     createBuffer.append(" VARCHAR(255) ");
@@ -845,6 +856,14 @@ public class YiliTableProcessor extends AbstractProcessor {
                                 }
                                 case ORACLE: {
                                     createBuffer.append(" VARCHAR2(255) ");
+                                    break;
+                                }
+                                case MYSQL: {
+                                    if(comBean.getDefTypeColumn().contains("List") || comBean.getDefTypeColumn().contains("Map")||!comBean.getDefTypeColumn().contains("java")) {
+                                        createBuffer.append(" json ");
+                                    } else {
+                                        createBuffer.append(" VARCHAR(255) ");
+                                    }
                                     break;
                                 }
                                 default: {
@@ -886,14 +905,6 @@ public class YiliTableProcessor extends AbstractProcessor {
 
                 createBuffer.append(" ,");
 
-//                names2.append(",#{");
-//                names2.append(PARAM_OBJECT);
-//                names2.append(name);
-//                names2.append("}");
-//                names3.append(",#'{'list[{0}].");
-//                names3.append(name);
-//                names3.append("}");
-
                 if (comBean.isVirtualTableId()) {
                     virtualTableId = name;
                     virtualTableIdColumn = columnName;
@@ -915,18 +926,9 @@ public class YiliTableProcessor extends AbstractProcessor {
                                     null));
                             baseGenUpdateAllSet.append(Constant.escape(columnName) + " = #{" + name + "} ,");
                         } else {
-                            switch (Constant.dataBase) {
-                                case ORACLE: {
-                                    updateSetStatement.append(treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + Constant.escape(columnName) + " = SYSDATE " + ","))));
-                                    baseGenUpdateAllSet.append(columnName + " = SYSDATE ,");
-                                    break;
-                                }
-                                default: {
-                                    updateSetStatement.append(treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + Constant.escape(columnName) + " = NOW() " + ","))));
-                                    baseGenUpdateAllSet.append(columnName + " = NOW() ,");
-                                    break;
-                                }
-                            }
+                            String dateStr = Constant.escapeDate();
+                            updateSetStatement.append(treeMaker.Exec(treeMaker.Assignop(JCTree.Tag.PLUS_ASG, treeMaker.Ident(names.fromString("result")), treeMaker.Literal("  " + Constant.escape(columnName) + " = " + dateStr + " " + ","))));
+                            baseGenUpdateAllSet.append(columnName + " = " + dateStr + " ,");
                         }
 
                     }

@@ -63,6 +63,33 @@ public final class Constant {
     }
 
     /**
+     * 获取database
+     * @return 时间戳
+     */
+    public static String escapeDate() {
+        if (dataBase != null) {
+            switch (dataBase) {
+                case SQLSERVER: {
+                    return "GETDATE()";
+                }
+                case ORACLE: {
+                    return "SYSDATE";
+                }
+
+                case SQLITE: {
+                    return "DATETIME('now')";
+                }
+                case POSTGRESQL:
+                case MYSQL:
+                default: {
+                    break;
+                }
+            }
+        }
+        return "CURRENT_TIMESTAMP";
+    }
+
+    /**
      * 处理数据库的分页
      * @param offsetStr 偏移量字段 或者值
      * @param sizeStr  size字段 或者值

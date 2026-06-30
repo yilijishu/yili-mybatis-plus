@@ -41,6 +41,7 @@ com/yilijishu/mybatis/package-info.class
 com/yilijishu/mybatis/ann/AddSelectCondition.class
 com/yilijishu/mybatis/ann/VirtualTableId.class
 com/yilijishu/mybatis/wapper/UpdateInterface.class
+com/yilijishu/mybatis/handler/JacksonTypeHandler.class
 com/yilijishu/mybatis/ann/YiliTableProcessor.class
 com/yilijishu/mybatis/wapper/LambdaUpdateSql.class
 com/yilijishu/mybatis/build/AutoCreateAction.class
@@ -51,6 +52,7 @@ com/yilijishu/mybatis/wapper/GroupByConditions.class
 com/yilijishu/mybatis/ann/YiliTableProcessor$2.class
 com/yilijishu/mybatis/iter/BaseBeanInterface.class
 com/yilijishu/mybatis/wapper/QueryAndOrConditions.class
+com/yilijishu/mybatis/handler/AbstractJsonTypeHandler.class
 com/yilijishu/mybatis/wapper/SqlKey.class
 com/yilijishu/mybatis/mapper/provider/BaseSqlProvider.class
 com/yilijishu/mybatis/ann/AutoModifyTime.class

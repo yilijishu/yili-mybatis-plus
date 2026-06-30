@@ -33,21 +33,32 @@ public class ComBean {
 
     //判断是否增加判断条件
     private boolean ifFieldCondition = false;
+    //判断条件名
     private String ifFieldConditionName;
 
+    //虚拟ID
     private boolean virtualTableId = false;
 
+    //不为空
     private Boolean notNull = false;
 
+    //数据库类型
     private String columnType;
 
+    /**
+     * 默认修改
+     */
     private boolean autoModifyTime = false;
 
+    //默认创建
     private boolean autoCreateTime = false;
 
-
+    //是否删除
     private boolean delTag = false;
-
+    //删除标记
     private String delTagValue;
+
+    private boolean handler = false;
+    private String handlerStr;
 
 }

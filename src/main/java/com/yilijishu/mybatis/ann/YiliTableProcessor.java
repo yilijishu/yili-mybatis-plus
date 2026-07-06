@@ -1,7 +1,6 @@
 package com.yilijishu.mybatis.ann;
 
 
-import com.google.auto.service.AutoService;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.*;
@@ -18,7 +17,10 @@ import com.yilijishu.mybatis.entity.ComMethod;
 import com.yilijishu.mybatis.util.CamelUnderUtil;
 import org.apache.ibatis.type.TypeHandler;
 
-import javax.annotation.processing.*;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Messager;
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
@@ -31,7 +33,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 
-@AutoService(Processor.class)
 public class YiliTableProcessor extends AbstractProcessor {
 
     private static final String PARAM_OBJECT = "p.";
@@ -43,6 +44,10 @@ public class YiliTableProcessor extends AbstractProcessor {
     private com.sun.tools.javac.code.Symtab symtab;
 
     private Types types;
+
+    public YiliTableProcessor() {
+        super();
+    }
 
 
     // 定义需要处理的注解
@@ -406,8 +411,8 @@ public class YiliTableProcessor extends AbstractProcessor {
                                 if ("value()".equals(a.fst.toString())) {
                                     String tmp = a.snd.getValue().toString();
                                     comBean.setColumValue(tmp);
-                                } else if("typeHandler()".equals(a.fst.toString())) {
-                                    Class<?> cls = (Class<? extends TypeHandler>)a.snd.getValue();
+                                } else if ("typeHandler()".equals(a.fst.toString())) {
+                                    Class<?> cls = (Class<? extends TypeHandler>) a.snd.getValue();
                                     comBean.setHandler(true);
                                     comBean.setHandlerStr(cls.getName());
                                 }
@@ -558,7 +563,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                     comBean.setColumn(true);
                     comBean.setColumValue(column.value());
                     Class<?> cls = column.typeHandler();
-                    if(cls != null) {
+                    if (cls != null) {
                         comBean.setHandler(true);
                         comBean.setHandlerStr(cls.getName());
                     }
@@ -650,7 +655,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                         insertNames2.append(",#{");
                         insertNames2.append(PARAM_OBJECT);
                         insertNames2.append(name);
-                        if(comBean.isHandler()) {
+                        if (comBean.isHandler()) {
                             insertNames2.append(", typeHandler=");
                             insertNames2.append(comBean.getHandlerStr());
                         }
@@ -670,7 +675,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                     if (!comBean.isAutoCreateTime()) {
                         insertNames3.append(",#'{'list[{0}].");
                         insertNames3.append(name);
-                        if(comBean.isHandler()) {
+                        if (comBean.isHandler()) {
                             insertNames2.append(", typeHandler=");
                             insertNames2.append(comBean.getHandlerStr());
                         }
@@ -859,7 +864,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                                     break;
                                 }
                                 case MYSQL: {
-                                    if(comBean.getDefTypeColumn().contains("List") || comBean.getDefTypeColumn().contains("Map")||!comBean.getDefTypeColumn().contains("java")) {
+                                    if (comBean.getDefTypeColumn().contains("List") || comBean.getDefTypeColumn().contains("Map") || !comBean.getDefTypeColumn().contains("java")) {
                                         createBuffer.append(" json ");
                                     } else {
                                         createBuffer.append(" VARCHAR(255) ");

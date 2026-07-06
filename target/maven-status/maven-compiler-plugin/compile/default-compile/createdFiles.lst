@@ -27,10 +27,10 @@ com/yilijishu/mybatis/ann/Table.class
 com/yilijishu/mybatis/ann/AutoCreateTime.class
 com/yilijishu/mybatis/constant/Constant$Oper.class
 com/yilijishu/mybatis/ann/DefWhere.class
+com/yilijishu/mybatis/ann/DefaultValue.class
 com/yilijishu/mybatis/wapper/QuerySql.class
 com/yilijishu/mybatis/ann/ColumnType.class
 com/yilijishu/mybatis/constant/Constant$OrderByValue.class
-META-INF/services/javax.annotation.processing.Processor
 com/yilijishu/mybatis/wapper/fun/SFunction.class
 com/yilijishu/mybatis/constant/Constant.class
 com/yilijishu/mybatis/wapper/QueryInterface.class

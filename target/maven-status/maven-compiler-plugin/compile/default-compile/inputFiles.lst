@@ -40,6 +40,7 @@
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/ann/TableId.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/ann/AutoModifyTime.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/wapper/QuerySql.java
+/Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/ann/DefaultValue.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/wapper/LambdaYiliSql.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/ann/DelTag.java
 /Users/zhangyang/Documents/projects/yili-mybatis-plus/src/main/java/com/yilijishu/mybatis/wapper/UpdateSql.java

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class BaseManager<T, TB extends BaseMapper<T>> {
     //-----------------------------------------标准产物START-----------------------------------------
@@ -63,8 +64,16 @@ public class BaseManager<T, TB extends BaseMapper<T>> {
         return mapper.querySqlResultR(querySql);
     }
 
+    public List<Map<String, Object>> querySqlResultMap(YiliBaseSql<T> querySql) {
+        return mapper.querySqlResultMap(querySql);
+    }
+
     public <R> R querySqlResultROne(YiliBaseSql<T> querySql) {
         return mapper.querySqlResultROne(querySql);
+    }
+
+    public Map<String, Object> querySqlResultMapOne(YiliBaseSql<T> querySql) {
+        return mapper.querySqlResultMapOne(querySql);
     }
 
     public T querySqlOne(YiliBaseSql<T> querySql) {

@@ -980,7 +980,6 @@ public class YiliTableProcessor extends AbstractProcessor {
         }
         messager.printMessage(Diagnostic.Kind.NOTE, "开始设置默认WHERE");
         if (defWhereList != null && defWhereList.size() > 0) {
-            defWhere.append(" where ");
             for (int i = 0; i < defWhereList.size(); i++) {
                 ComBean comBean = defWhereList.get(i);
                 if (comBean.isColumn()) {

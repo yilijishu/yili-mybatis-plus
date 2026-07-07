@@ -187,8 +187,11 @@ public class BaseSqlProvider {
         sbf.append(p.baseGenColumnNames());
         sbf.append(" FROM ");
         sbf.append(p.baseGenTable());
-        sbf.append(p.baseGenDefWhere());
-        sbf.append(p.baseGenSelectWhere());
+        String whereSql =  p.baseGenSelectWhere();
+        if(whereSql != null && whereSql.length() > 2) {
+            sbf.append(" WHERE ");
+            sbf.append(whereSql);
+        }
         sbf.append(p.baseGenOrderBy());
         if (page != null) {
             sbf.append(Constant.limitEscape(page.getStart().toString(), page.getPageSize().toString()));
@@ -212,8 +215,11 @@ public class BaseSqlProvider {
         sbf.append(p.baseGenColumnNames());
         sbf.append(" FROM ");
         sbf.append(p.baseGenTable());
-        sbf.append(p.baseGenDefWhere());
-        sbf.append(p.baseGenSelectWhere());
+        String whereSql =  p.baseGenSelectWhere();
+        if(whereSql != null && whereSql.length() > 2) {
+            sbf.append(" WHERE ");
+            sbf.append(whereSql);
+        }
         sbf.append(p.baseGenOrderBy());
         return sbf.toString();
     }
@@ -233,8 +239,11 @@ public class BaseSqlProvider {
         sbf.append(p.baseGenColumnNames());
         sbf.append(" FROM ");
         sbf.append(p.baseGenTable());
-        sbf.append(p.baseGenDefWhere());
-        sbf.append(p.baseGenSelectWhere());
+        String whereSql =  p.baseGenSelectWhere();
+        if(whereSql != null && whereSql.length() > 2) {
+            sbf.append(" WHERE ");
+            sbf.append(whereSql);
+        }
         sbf.append(p.baseGenOrderBy());
         sbf.append(Constant.limitEscape("0", "1"));
         return sbf.toString();
@@ -255,8 +264,11 @@ public class BaseSqlProvider {
         sbf.append(" COUNT(1) ");
         sbf.append(" FROM ");
         sbf.append(p.baseGenTable());
-        sbf.append(p.baseGenDefWhere());
-        sbf.append(p.baseGenSelectWhere());
+        String whereSql =  p.baseGenSelectWhere();
+        if(whereSql != null && whereSql.length() > 2) {
+            sbf.append(" WHERE ");
+            sbf.append(whereSql);
+        }
         return sbf.toString();
     }
 

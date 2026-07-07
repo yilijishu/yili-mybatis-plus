@@ -672,7 +672,7 @@ public class YiliSql<Entity, B, Children extends YiliSql<Entity, B, Children>> e
             if (i == 0 && where.get(i).getSqlKey() != SqlKey.GROUP_BY) {
                 stringBuffer.append(" WHERE ");
             }
-            if (!(qc instanceof QueryAndOrConditions)) {
+            if (!(qc instanceof QueryAndOrConditions) && !(qc instanceof OrderByConditions) && !(qc instanceof GroupByConditions)) {
                 if (i > 0 && (i - 1 != lastOr)) {
                     stringBuffer.append(" AND ");
                 }

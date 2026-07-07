@@ -1,5 +1,6 @@
 package com.yilijishu.mybatis.wapper;
 
+import com.yilijishu.mybatis.constant.Constant;
 import lombok.Data;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public class OrderByConditions<T> extends QueryConditions<T> {
     public String toSqlString() {
         StringBuffer stringBuffer = new StringBuffer();
         stringBuffer.append(sqlKey.getSqlSegment());
+        stringBuffer.append(Constant.SPACE);
         orderByConditionsList.forEach(e->{
             stringBuffer.append(e.toSqlString());
         });

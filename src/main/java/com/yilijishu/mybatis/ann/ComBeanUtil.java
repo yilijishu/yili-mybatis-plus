@@ -224,7 +224,7 @@ public class ComBeanUtil {
             baseGenOrderBy.append(" ORDER BY ");
             for (int i = 0; i < orderByList.size(); i++) {
                 ComBean comBean = orderByList.get(i);
-                baseGenOrderBy.append(CamelUnderUtil.underName(getColumnName(comBean)));
+                baseGenOrderBy.append(Constant.escape(getColumnName(comBean)));
                 baseGenOrderBy.append(Constant.SPACE);
                 baseGenOrderBy.append(comBean.getOrderByVal());
                 if (i + 1 < orderByList.size()) {

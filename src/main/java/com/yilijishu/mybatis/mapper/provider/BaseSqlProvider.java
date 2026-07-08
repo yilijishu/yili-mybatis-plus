@@ -113,14 +113,14 @@ public class BaseSqlProvider {
     }
 
     /**
-     * 判断是否不为空修改语句组装
+     * 全部修改
      *
-     * @param p 为空不修改
+     * @param p
      * @param <T> 范型
      * @return 返回sql
      */
     @SneakyThrows
-    public <T extends BaseBeanInterface> String updateNotIfNull(@Param(PARAM_OBJECT) T p) {
+    public <T extends BaseBeanInterface> String updateAll(@Param(PARAM_OBJECT) T p) {
         setDb(p);
         StringBuffer sbf = new StringBuffer();
         sbf.append("update ");
@@ -244,7 +244,6 @@ public class BaseSqlProvider {
             sbf.append(" WHERE ");
             sbf.append(whereSql);
         }
-        sbf.append(p.baseGenOrderBy());
         sbf.append(Constant.limitEscape("0", "1"));
         return sbf.toString();
     }
@@ -359,8 +358,11 @@ public class BaseSqlProvider {
         StringBuilder sbf = new StringBuilder();
         sbf.append(" DELETE FROM ");
         sbf.append(t.baseGenTable());
-        sbf.append(t.baseGenDefWhere());
-        sbf.append(t.baseGenSelectWhere());
+        String whereSql =  t.baseGenSelectWhere();
+        if(whereSql != null && whereSql.length() > 2) {
+            sbf.append(" WHERE ");
+            sbf.append(whereSql);
+        }
         return sbf.toString();
     }
 

@@ -2,10 +2,12 @@ package com.yilijishu.mybatis.entity;
 
 import lombok.Data;
 
-import java.lang.reflect.Type;
-
 @Data
 public class ComBean {
+
+    private String defaultValue;
+
+    private boolean defaultValueBool;
     private String name;
 
     private String defTypeColumn;

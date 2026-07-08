@@ -22,7 +22,7 @@ public interface BaseBeanInterface {
 
 
     /**
-     * 生成的插入列名 逗号分割 base_1, base_2
+     * 生成的插入列名
      * @return base_1, base_2
      */
     default String baseGenInertColumnNames() {
@@ -45,13 +45,6 @@ public interface BaseBeanInterface {
         return "";
     }
 
-    /**
-     * 生成的默认where条件， where 1=1
-     * @return where 1=1
-     */
-    default String baseGenDefWhere() {
-        return "";
-    }
 
 
     /**

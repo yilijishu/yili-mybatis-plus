@@ -42,6 +42,8 @@ public class YiliTableProcessor extends AbstractProcessor {
 
     private Types types;
 
+    private ComBeanUtil comBeanUtil;
+
     public YiliTableProcessor() {
         super();
     }
@@ -66,6 +68,7 @@ public class YiliTableProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         this.messager = processingEnv.getMessager();
+        comBeanUtil = new ComBeanUtil(messager, processingEnv);
         try {
             ProcessingEnvironment unwrappedEnv = jbUnwrap(ProcessingEnvironment.class, processingEnv);
             this.trees = JavacTrees.instance(unwrappedEnv);
@@ -76,6 +79,7 @@ public class YiliTableProcessor extends AbstractProcessor {
             this.names = Names.instance(context);
             this.symtab = Symtab.instance(context);
             this.types = Types.instance(context);
+
         } catch (Exception e) {
             // 解包失败降级使用原生env
             messager.printMessage(Diagnostic.Kind.WARNING, "解包ProcessingEnvironment失败，使用原生环境:" + e.getMessage());
@@ -145,8 +149,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                                     jcMethodDeclList = jcMethodDeclList.append(jcMethodDecl);
                                 }
                             }
-                            messager.printMessage(Diagnostic.Kind.NOTE, "获取到属性列表：" + jcVariableDeclList.size());
-                            ComBeanUtil comBeanUtil = new ComBeanUtil(messager, processingEnv);
+                            messager.printMessage(Diagnostic.Kind.WARNING, "获取到属性列表：" + jcVariableDeclList.size());
                             java.util.List<JCTree.JCMethodDecl> printMethods = buildMethods(comBeanUtil.makeColumnNamesMethodDecl(table.supClass(), jcVariableDeclList), element, table, makeMethodDecl(table.supClass(), jcMethodDeclList));
                             if (printMethods != null && printMethods.size() > 0) {
                                 for (JCTree.JCMethodDecl printMethod : printMethods) {
@@ -159,11 +162,11 @@ public class YiliTableProcessor extends AbstractProcessor {
                             super.visitClassDef(jcClassDecl);
                         }
                     });
-
+                    messager.printMessage(Diagnostic.Kind.WARNING, "解析完成：" + table);
                 }
             }
         } else {
-            messager.printMessage(Diagnostic.Kind.NOTE, "失败：" + set);
+            messager.printMessage(Diagnostic.Kind.WARNING, "失败：" + set);
         }
         return true;
     }
@@ -203,10 +206,10 @@ public class YiliTableProcessor extends AbstractProcessor {
      * @return 如果类已经实现了指定接口则返回true，否则返回false
      */
     private boolean hasInterface(JCTree.JCClassDecl jcClassDecl, Class<?> interfaceClass) {
-        messager.printMessage(Diagnostic.Kind.NOTE, "开始判断接口是否存在");
+        messager.printMessage(Diagnostic.Kind.WARNING, "开始判断接口是否存在");
         for (JCTree.JCExpression impl : jcClassDecl.implementing) {
             if (impl.type.toString().equals(interfaceClass.getName())) {
-                messager.printMessage(Diagnostic.Kind.NOTE, "开始判断接口存在");
+                messager.printMessage(Diagnostic.Kind.WARNING, "开始判断接口存在");
                 return true;
             }
         }
@@ -220,7 +223,7 @@ public class YiliTableProcessor extends AbstractProcessor {
      * @param importClass
      */
     private void importPackage(Element element, Class<?> importClass) {
-        messager.printMessage(Diagnostic.Kind.NOTE, "导入包");
+        messager.printMessage(Diagnostic.Kind.WARNING, "导入包");
         JCTree.JCCompilationUnit compilationUnit = (JCTree.JCCompilationUnit) trees.getPath(element).getCompilationUnit();
         JCTree.JCFieldAccess fieldAccess = treeMaker.Select(treeMaker.Ident(names.fromString(importClass.getPackage().getName())), names.fromString(importClass.getSimpleName()));
         JCTree.JCImport jcImport = treeMaker.Import(fieldAccess, false);
@@ -230,7 +233,7 @@ public class YiliTableProcessor extends AbstractProcessor {
             imports.append(compilationUnit.defs.get(i));
         }
         compilationUnit.defs = imports.toList();
-        messager.printMessage(Diagnostic.Kind.NOTE, "导入完成" + compilationUnit.defs);
+        messager.printMessage(Diagnostic.Kind.WARNING, "导入完成" + compilationUnit.defs);
     }
 
     /**
@@ -251,18 +254,18 @@ public class YiliTableProcessor extends AbstractProcessor {
             for (JCTree.JCExpression impl : implementing) {
                 statements.append(impl);
             }
-            messager.printMessage(Diagnostic.Kind.NOTE, "开始创建实现类");
+            messager.printMessage(Diagnostic.Kind.WARNING, "开始创建实现类");
             Symbol.ClassSymbol sym = new Symbol.ClassSymbol(Flags.AccessFlags, names.fromString(interfaceClass.getSimpleName()), null);
             statements.append(treeMaker.Ident(sym));
-            messager.printMessage(Diagnostic.Kind.NOTE, "开始替换类");
+            messager.printMessage(Diagnostic.Kind.WARNING, "开始替换类");
             jcClassDecl.implementing = statements.toList();
-            messager.printMessage(Diagnostic.Kind.NOTE, "替换完成" + ((JCTree.JCCompilationUnit) trees.getPath(element).getCompilationUnit()).defs);
+            messager.printMessage(Diagnostic.Kind.WARNING, "替换完成" + ((JCTree.JCCompilationUnit) trees.getPath(element).getCompilationUnit()).defs);
         }
     }
 
 
     private ComMethod makeMethodDecl(String supClass, List<JCTree.JCMethodDecl> jcMethodDeclList) {
-        messager.printMessage(Diagnostic.Kind.NOTE, "开始执行方法对象");
+        messager.printMessage(Diagnostic.Kind.WARNING, "开始执行方法对象");
         ComMethod comMethod = new ComMethod();
         if (jcMethodDeclList != null && jcMethodDeclList.size() > 0) {
             for (JCTree.JCMethodDecl jcMethodDecl : jcMethodDeclList) {
@@ -291,7 +294,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                 }
             }
         }
-        messager.printMessage(Diagnostic.Kind.NOTE, "开始执行超类方法对象");
+        messager.printMessage(Diagnostic.Kind.WARNING, "开始执行超类方法对象");
         //Class<?> clss = Class.forName(supClass);
         //替换写法
         if (supClass != null && supClass.length() > 1) {
@@ -318,7 +321,7 @@ public class YiliTableProcessor extends AbstractProcessor {
                 }
             }
         }
-        messager.printMessage(Diagnostic.Kind.NOTE, "方法返回：" + comMethod);
+        messager.printMessage(Diagnostic.Kind.WARNING, "方法返回：" + comMethod);
         return comMethod;
     }
 
@@ -341,7 +344,6 @@ public class YiliTableProcessor extends AbstractProcessor {
      * @return 方法定义列表
      */
     public java.util.List<JCTree.JCMethodDecl> buildMethods(java.util.List<ComBean> comBeans, Element element, Table table, ComMethod comMethod) {
-        ComBeanUtil comBeanUtil = new ComBeanUtil(messager, processingEnv);
         return comBeanUtil.analyser(comBeans, treeMaker, names, symtab, element, table, comMethod);
     }
 
@@ -372,7 +374,7 @@ public class YiliTableProcessor extends AbstractProcessor {
      */
     public JCTree.JCMethodDecl buildMethod(String method, ListBuffer<JCTree.JCStatement> statements, String returnType) {
         JCTree.JCBlock body = treeMaker.Block(0, statements.toList());
-        messager.printMessage(Diagnostic.Kind.NOTE, "代码块:" + body.toString());
+        messager.printMessage(Diagnostic.Kind.WARNING, "代码块:" + body.toString());
         // 生成columnNames()方法
         return treeMaker
                 .MethodDef(treeMaker.Modifiers(com.sun.tools.javac.code.Flags.PUBLIC), names.fromString(method),

@@ -62,8 +62,9 @@ public class ComBeanUtil {
     }
 
     public java.util.List<JCTree.JCMethodDecl> analyser(java.util.List<ComBean> comBeans, TreeMaker treeMaker, Names names, Symtab symtab, Element element, Table table, ComMethod comMethod) {
-        messager.printMessage(Diagnostic.Kind.NOTE, "执行buildMethods" + comBeans + comMethod);
+        messager.printMessage(Diagnostic.Kind.WARNING, "执行buildMethods" + table.value() + Constant.escape(CamelUnderUtil.underName(element.getSimpleName().toString())));
         JCUtils jcUtils = new JCUtils(treeMaker, names, symtab);
+        messager.printMessage(Diagnostic.Kind.WARNING, "new" + table.value() + Constant.escape(CamelUnderUtil.underName(element.getSimpleName().toString())));
         //生成的表名  table_name
         StringBuffer baseGenTable = new StringBuffer();
         if (table.value() != null && !"".equals(table.value())) {
@@ -76,12 +77,15 @@ public class ComBeanUtil {
         //生成的插入列名
         ListBuffer<JCTree.JCStatement> baseGenInertColumnNames = new ListBuffer<>();
         baseGenInertColumnNames.append(jcUtils.initResult());
+        baseGenInertColumnNames.append(jcUtils.applyMethod("result", "append", " "));
         //生成的插入Name
         ListBuffer<JCTree.JCStatement> baseGenInsertNames = new ListBuffer<>();
         baseGenInsertNames.append(jcUtils.initResult());
+        baseGenInsertNames.append(jcUtils.applyMethod("result", "append", " "));
         //生成的插入列表Name
         ListBuffer<JCTree.JCStatement> baseGenInsertListNames = new ListBuffer<>();
         baseGenInsertListNames.append(jcUtils.initResult());
+        baseGenInsertListNames.append(jcUtils.applyMethod("result", "append", " "));
         //生成的主键列名， 主键列名
         StringBuffer baseGenId = new StringBuffer();
         //生成的修改全部的set语法
@@ -89,12 +93,15 @@ public class ComBeanUtil {
         //生成的查询where
         ListBuffer<JCTree.JCStatement> baseGenSelectWhere = new ListBuffer<>();
         baseGenSelectWhere.append(jcUtils.initResult());
+        baseGenSelectWhere.append(jcUtils.applyMethod("result", "append", "   "));
         //生成的修改set
         ListBuffer<JCTree.JCStatement> baseGenUpdateSet = new ListBuffer<>();
         baseGenUpdateSet.append(jcUtils.initResult());
+        baseGenUpdateSet.append(jcUtils.applyMethod("result", "append", " "));
         //生成的修改where条件
         ListBuffer<JCTree.JCStatement> baseGenUpdateWhere = new ListBuffer<>();
         baseGenUpdateWhere.append(jcUtils.initResult());
+        baseGenUpdateWhere.append(jcUtils.applyMethod("result", "append", " "));
         //生成的order by
         StringBuffer baseGenOrderBy = new StringBuffer();
         java.util.List<ComBean> orderByList = new ArrayList<>();
@@ -211,7 +218,7 @@ public class ComBeanUtil {
             }
         }
 
-        messager.printMessage(Diagnostic.Kind.NOTE, "开始设置排序" + orderByList);
+        messager.printMessage(Diagnostic.Kind.WARNING, "开始设置排序" + orderByList);
         if (orderByList != null && orderByList.size() > 0) {
             orderByList.sort((a, b) -> a.getOrder() - b.getOrder());
             baseGenOrderBy.append(" ORDER BY ");
@@ -232,7 +239,7 @@ public class ComBeanUtil {
                         jcUtils.applyMethod("result", "append", "  " + Constant.escape(virtualTableIdColumn) + " = #{" + PARAM_OBJECT + virtualTableId + "} "),
                         jcUtils.applyMethod("result", "append", "  " + Constant.escape(tableIdColumnVal) + " = #{" + PARAM_OBJECT + tableIdVal + "} ")));
             } else {
-                baseGenUpdateWhere.append(jcUtils.ifApply(jcUtils.getMethodIsNotNull("get".concat(CamelUnderUtil.nameUpper(virtualTableId))),
+                baseGenUpdateWhere.append(jcUtils.ifApply(jcUtils.getMethodIsNotNull("get".concat(CamelUnderUtil.nameUpper(tableIdVal))),
                         jcUtils.applyMethod("result", "append", "  " + Constant.escape(tableIdColumnVal) + " = #{" + PARAM_OBJECT + tableIdVal + "} ")));
             }
         }
@@ -241,13 +248,18 @@ public class ComBeanUtil {
         java.util.List<JCTree.JCMethodDecl> results = new ArrayList<>();
         results.add(jcUtils.buildMethod("baseGenTable", baseGenTable.toString()));
         results.add(jcUtils.buildMethod("baseGenColumnNames", baseGenColumnNames.toString().substring(1)));
-        baseGenInertColumnNames.append(jcUtils.initResult());
+        baseGenInertColumnNames.append(jcUtils.returnMethod());
+        messager.printMessage(Diagnostic.Kind.WARNING, "baseGenInertColumnNames" + baseGenInertColumnNames);
         results.add(jcUtils.buildMethod("baseGenInertColumnNames", baseGenInertColumnNames));
-        baseGenInsertNames.append(jcUtils.initResult());
+        baseGenInsertNames.append(jcUtils.returnMethod());
+        messager.printMessage(Diagnostic.Kind.WARNING, "baseGenInsertNames" + baseGenInertColumnNames);
         results.add(jcUtils.buildMethod("baseGenInsertNames", baseGenInsertNames));
-        baseGenInsertListNames.append(jcUtils.initResult());
+        baseGenInsertListNames.append(jcUtils.returnMethod());
+        messager.printMessage(Diagnostic.Kind.WARNING, "baseGenInsertListNames" + baseGenInsertListNames);
         results.add(jcUtils.buildMethod("baseGenInsertListNames", baseGenInsertListNames));
+        messager.printMessage(Diagnostic.Kind.WARNING, "baseGenId" + baseGenId);
         results.add(jcUtils.buildMethod("baseGenId", baseGenId.toString()));
+        messager.printMessage(Diagnostic.Kind.WARNING, "baseGenUpdateAllSet" + baseGenUpdateAllSet);
         results.add(jcUtils.buildMethod("baseGenUpdateAllSet", baseGenUpdateAllSet.substring(0, baseGenUpdateAllSet.length() - 1)));
         if (comMethod.isAddSelectCondition()) {
             for (String methodName : comMethod.getAddSelectConditionMethod()) {
@@ -256,10 +268,13 @@ public class ComBeanUtil {
             }
         }
         baseGenSelectWhere.append(jcUtils.returnMethod(3));
+        messager.printMessage(Diagnostic.Kind.WARNING, "baseGenSelectWhere" + baseGenSelectWhere);
         results.add(jcUtils.buildMethod("baseGenSelectWhere", baseGenSelectWhere));
         baseGenUpdateSet.append(jcUtils.returnMethod());
+        messager.printMessage(Diagnostic.Kind.WARNING, "baseGenUpdateSet" + baseGenUpdateSet);
         results.add(jcUtils.buildMethod("baseGenUpdateSet", baseGenUpdateSet));
         baseGenUpdateWhere.append(jcUtils.returnMethod());
+        messager.printMessage(Diagnostic.Kind.WARNING, "baseGenUpdateWhere" + baseGenUpdateWhere);
         results.add(jcUtils.buildMethod("baseGenUpdateWhere", baseGenUpdateWhere));
         if (comMethod.isOverrideOrderBy()) {
             ListBuffer<JCTree.JCStatement> orderByStatement = new ListBuffer<>();
@@ -276,7 +291,7 @@ public class ComBeanUtil {
             results.add(jcUtils.buildMethod("genDelTagColumn", genDelTagColumn.toString()));
             results.add(jcUtils.buildMethod("genDelTagValue", genDelTagValue.toString()));
         }
-        messager.printMessage(Diagnostic.Kind.NOTE, "生成脚本结束");
+        messager.printMessage(Diagnostic.Kind.WARNING, "生成脚本结束");
         return results;
     }
 
@@ -288,7 +303,7 @@ public class ComBeanUtil {
      * @return list combean
      */
     public java.util.List<ComBean> makeColumnNamesMethodDecl(String supClass, List<JCTree.JCVariableDecl> jcVariableDeclList) {
-        messager.printMessage(Diagnostic.Kind.NOTE, "执行makeColumnNamesMethodDecl");
+        messager.printMessage(Diagnostic.Kind.WARNING, "执行makeColumnNamesMethodDecl");
         java.util.List<ComBean> comBeans = null;
         if (jcVariableDeclList != null && jcVariableDeclList.size() > 0) {
             comBeans = new ArrayList<>();
@@ -361,7 +376,7 @@ public class ComBeanUtil {
                             comBean.setOrderBy(true);
                             for (Pair<Symbol.MethodSymbol, Attribute> a : an.attribute.values) {
                                 if ("value()".equals(a.fst.toString())) {
-                                    messager.printMessage(Diagnostic.Kind.NOTE, a.snd.getValue().toString());
+                                    messager.printMessage(Diagnostic.Kind.WARNING, a.snd.getValue().toString());
                                     comBean.setOrderByVal(a.snd.getValue().toString());
                                 } else if ("order()".equals(a.fst.toString())) {
                                     comBean.setOrder(Integer.parseInt(a.snd.getValue().toString()));
@@ -509,7 +524,7 @@ public class ComBeanUtil {
                     comBean.setOrder(orderBy.order());
                 }
 
-                messager.printMessage(Diagnostic.Kind.NOTE, "字段信息: " + comBean);
+                messager.printMessage(Diagnostic.Kind.WARNING, "字段信息: " + comBean);
             }
         }
 

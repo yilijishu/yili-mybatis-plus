@@ -135,7 +135,7 @@ public class JCUtils {
      *
      * @param condition 条件语句
      * @param apply     执行
-     * @return
+     * @return IF
      */
     public JCTree.JCIf ifApply(JCTree.JCBinary condition, JCTree.JCStatement apply) {
         ListBuffer<JCTree.JCStatement> ifBodyStmts = new ListBuffer<>();
@@ -151,7 +151,7 @@ public class JCUtils {
      * @param condition 条件语句
      * @param apply     执行
      * @param apply2  else执行
-     * @return
+     * @return IF
      */
     public JCTree.JCIf ifApply(JCTree.JCBinary condition, JCTree.JCStatement apply, JCTree.JCStatement apply2) {
         ListBuffer<JCTree.JCStatement> ifBodyStmts = new ListBuffer<>();
@@ -167,17 +167,18 @@ public class JCUtils {
 
     /**
      * 初始化 定义result  StringBuilder result = new StringBuilder();
-     * @return
+     * @return DEF
      */
     public JCTree.JCStatement initResult() {
-        return treeMaker.VarDef(treeMaker.Modifiers(0), names.fromString("reuslt"), treeMaker.Ident(names.fromString("StringBuilder")), this.newClass("StringBuilder"));
+        return treeMaker.VarDef(treeMaker.Modifiers(0), names.fromString("result"), treeMaker.Ident(names.fromString("StringBuilder")), this.newClass("StringBuilder"));
     }
 
 
     /**
      * 执行
-     * @param methodName
-     * @return
+     * @param methodName 方法名
+     * @param appendStr  内容
+     * @return IF
      */
     public JCTree.JCStatement forExec(String methodName, String appendStr) {
         return ifApply(getMethodIsNotNull(methodName), applyMethod("result", "append", appendStr));
@@ -186,8 +187,10 @@ public class JCUtils {
 
     /**
      * 执行
-     * @param methodName
-     * @return
+     * @param methodName 方法名
+     * @param methodName2 方法名2
+     * @param appendStr  内容
+     * @return statement
      */
     public JCTree.JCStatement forExec2(String methodName, String methodName2, String appendStr) {
         JCTree.JCBinary jcBinary = getMethodIsNotNull(getMethodIsNotNull(methodName), getMethodIsNotNull(methodName2));
@@ -197,11 +200,17 @@ public class JCUtils {
 
     /**
      * 返回数据
-     * @return
+     * @return return
      */
     public JCTree.JCReturn returnMethod() {
         return returnMethod(1);
     }
+
+    /**
+     * 返回return
+     * @param subNum sub 数
+     * @return return
+     */
     public JCTree.JCReturn returnMethod(int subNum) {
         JCTree.JCIdent ident = treeMaker.Ident(names.fromString("result"));
         JCTree.JCMethodInvocation toStringCall = treeMaker.Apply(
@@ -215,7 +224,7 @@ public class JCUtils {
                 treeMaker.Select(ident, names.fromString("length")),
                 List.nil()
         );
-        JCTree.JCBinary minusExpr = treeMaker.Binary(JCTree.Tag.MINUS, lengthCall, treeMaker.Literal(1));
+        JCTree.JCBinary minusExpr = treeMaker.Binary(JCTree.Tag.MINUS, lengthCall, treeMaker.Literal(subNum));
         // substring(0, ...)
         JCTree.JCMethodInvocation substringCall = treeMaker.Apply(
                 List.nil(),
@@ -296,8 +305,8 @@ public class JCUtils {
     /**
      * 创建 域/方法 的多级访问, 方法的标识只能是最后一个
      *
-     * @param components
-     * @return
+     * @param components 组件
+     * @return 表达式
      */
     public JCTree.JCExpression memberAccess(String components) {
         String[] componentArray = components.split("\\.");
@@ -311,8 +320,8 @@ public class JCUtils {
     /**
      * 根据字符串获取Name，（利用Names的fromString静态方法）
      *
-     * @param s
-     * @return
+     * @param s 名称
+     * @return name格式化
      */
     public com.sun.tools.javac.util.Name getNameFromString(String s) {
         return names.fromString(s);

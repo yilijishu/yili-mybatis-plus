@@ -109,7 +109,7 @@ public class StandardWeb {
                     } catch (JsonProcessingException e) {
                         throw new BizException("无效的数据格式");
                     }
-                    return ApiResult.resultSuccess(baseService.updateIfNot(obj));
+                    return ApiResult.resultSuccess(baseService.updateAll(obj));
                 }
                 case "u": {
                     Object obj = null;

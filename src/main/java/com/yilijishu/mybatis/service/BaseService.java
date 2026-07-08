@@ -29,7 +29,7 @@ public interface BaseService {
      * @param p 实体类
      * @return 返回插入条数
      */
-    Integer updateIfNot(Object p);
+    Integer updateAll(Object p);
     /**
      * 批量删除数据，传递id列表
      * @param p 实体

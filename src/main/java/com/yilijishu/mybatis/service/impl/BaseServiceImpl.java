@@ -63,9 +63,9 @@ public class BaseServiceImpl implements BaseService {
      * @return 返回插入条数
      */
     @Override
-    public Integer updateIfNot(Object p) {
+    public Integer updateAll(Object p) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
-        return baseManager.updateNotIfNull(p);
+        return baseManager.updateAll(p);
     }
 
 

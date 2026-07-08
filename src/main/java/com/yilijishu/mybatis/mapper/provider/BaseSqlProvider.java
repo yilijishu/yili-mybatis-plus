@@ -115,7 +115,7 @@ public class BaseSqlProvider {
     /**
      * 全部修改
      *
-     * @param p
+     * @param p 修改全部
      * @param <T> 范型
      * @return 返回sql
      */
@@ -188,7 +188,7 @@ public class BaseSqlProvider {
         sbf.append(" FROM ");
         sbf.append(p.baseGenTable());
         String whereSql =  p.baseGenSelectWhere();
-        if(whereSql != null && whereSql.length() > 2) {
+        if(whereSql != null && whereSql.length() > 3) {
             sbf.append(" WHERE ");
             sbf.append(whereSql);
         }
@@ -216,7 +216,7 @@ public class BaseSqlProvider {
         sbf.append(" FROM ");
         sbf.append(p.baseGenTable());
         String whereSql =  p.baseGenSelectWhere();
-        if(whereSql != null && whereSql.length() > 2) {
+        if(whereSql != null && whereSql.length() > 3) {
             sbf.append(" WHERE ");
             sbf.append(whereSql);
         }
@@ -240,7 +240,7 @@ public class BaseSqlProvider {
         sbf.append(" FROM ");
         sbf.append(p.baseGenTable());
         String whereSql =  p.baseGenSelectWhere();
-        if(whereSql != null && whereSql.length() > 2) {
+        if(whereSql != null && whereSql.length() > 3) {
             sbf.append(" WHERE ");
             sbf.append(whereSql);
         }
@@ -264,7 +264,7 @@ public class BaseSqlProvider {
         sbf.append(" FROM ");
         sbf.append(p.baseGenTable());
         String whereSql =  p.baseGenSelectWhere();
-        if(whereSql != null && whereSql.length() > 2) {
+        if(whereSql != null && whereSql.length() > 3) {
             sbf.append(" WHERE ");
             sbf.append(whereSql);
         }
@@ -359,7 +359,7 @@ public class BaseSqlProvider {
         sbf.append(" DELETE FROM ");
         sbf.append(t.baseGenTable());
         String whereSql =  t.baseGenSelectWhere();
-        if(whereSql != null && whereSql.length() > 2) {
+        if(whereSql != null && whereSql.length() > 3) {
             sbf.append(" WHERE ");
             sbf.append(whereSql);
         }

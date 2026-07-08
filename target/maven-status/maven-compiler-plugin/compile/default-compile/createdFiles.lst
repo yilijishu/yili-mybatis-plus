@@ -1,5 +1,6 @@
 com/yilijishu/mybatis/ann/TableId.class
 com/yilijishu/mybatis/service/BaseService.class
+com/yilijishu/mybatis/ann/SqlTypeUtil$1.class
 com/yilijishu/mybatis/mapper/BaseMapper.class
 com/yilijishu/mybatis/wapper/OrderByConditions.class
 com/yilijishu/mybatis/ann/OrderBy.class
@@ -22,6 +23,7 @@ com/yilijishu/mybatis/ann/SetDataBase.class
 com/yilijishu/mybatis/wapper/UpdateSql.class
 com/yilijishu/mybatis/wapper/DeleteInterface.class
 com/yilijishu/mybatis/wapper/LambdaYiliSql.class
+com/yilijishu/mybatis/ann/SqlTypeUtil.class
 com/yilijishu/mybatis/ann/OverrideOrderBy.class
 com/yilijishu/mybatis/ann/Table.class
 com/yilijishu/mybatis/ann/AutoCreateTime.class
@@ -46,15 +48,17 @@ com/yilijishu/mybatis/ann/YiliTableProcessor.class
 com/yilijishu/mybatis/wapper/LambdaUpdateSql.class
 com/yilijishu/mybatis/build/AutoCreateAction.class
 com/yilijishu/mybatis/wapper/util/LambdaReflectUtil.class
+com/yilijishu/mybatis/ann/JCUtils.class
 com/yilijishu/mybatis/config/ObjectMapperConfig.class
 com/yilijishu/mybatis/entity/ComMethod.class
 com/yilijishu/mybatis/wapper/GroupByConditions.class
-com/yilijishu/mybatis/ann/YiliTableProcessor$2.class
 com/yilijishu/mybatis/iter/BaseBeanInterface.class
 com/yilijishu/mybatis/wapper/QueryAndOrConditions.class
 com/yilijishu/mybatis/handler/AbstractJsonTypeHandler.class
+com/yilijishu/mybatis/ann/ColumnUtils.class
 com/yilijishu/mybatis/wapper/SqlKey.class
 com/yilijishu/mybatis/mapper/provider/BaseSqlProvider.class
+com/yilijishu/mybatis/ann/ComBeanUtil.class
 com/yilijishu/mybatis/ann/AutoModifyTime.class
 com/yilijishu/mybatis/wapper/YiliBaseSql.class
 com/yilijishu/mybatis/ann/Column.class

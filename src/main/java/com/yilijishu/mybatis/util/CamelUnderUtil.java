@@ -108,7 +108,7 @@ public class CamelUnderUtil {
      * @return 返回首字母大写
      */
     public static String nameUpper(String name) {
-        if(StringUtils.isNotBlank(name)) {
+        if(name != null && !"".equals(name)) {
             name = name.substring(0,1).toUpperCase() + name.substring(1);
         }
         return name;

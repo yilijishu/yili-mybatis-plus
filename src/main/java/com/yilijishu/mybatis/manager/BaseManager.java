@@ -27,8 +27,8 @@ public class BaseManager<T, TB extends BaseMapper<T>> {
         return mapper.update(p);
     }
 
-    public Integer updateNotIfNull(T p) {
-        return mapper.updateNotIfNull(p);
+    public Integer updateAll(T p) {
+        return mapper.updateAll(p);
     }
 
     public List<T> select(T p) {

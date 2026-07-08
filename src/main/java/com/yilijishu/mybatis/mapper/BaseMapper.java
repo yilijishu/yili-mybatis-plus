@@ -57,9 +57,9 @@ public interface BaseMapper<T> {
      * @param p 实例
      * @return 返回执行条数
      */
-    @UpdateProvider(method = "updateNotIfNull", type = BaseSqlProvider.class)
+    @UpdateProvider(method = "updateAll", type = BaseSqlProvider.class)
     @ResultType(Integer.class)
-    Integer updateNotIfNull(@Param(PARAM_OBJECT) T p);
+    Integer updateAll(@Param(PARAM_OBJECT) T p);
 
     /**
      * 批量插入

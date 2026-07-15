@@ -35,7 +35,7 @@ public class BaseManager<T, TB extends BaseMapper<T>> {
         return mapper.select(p);
     }
 
-    public PageData<List<T>> selectPage(T p, Page page) {
+    public PageData<T> selectPage(T p, Page page) {
         page.setCount(count(p));
         if (page.isQuery()) {
             return new PageData<>(mapper.selectPage(p, page), page);

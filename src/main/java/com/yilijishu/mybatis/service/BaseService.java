@@ -72,7 +72,7 @@ public interface BaseService {
      * @param page 分页类
      * @return 返回集合数据
      */
-    PageData<List<Object>> selectByPage(Object p, Page page);
+    PageData<Object> selectByPage(Object p, Page page);
     /**
      * 查询数据【遵循标准排序】
      * @param p 实体类

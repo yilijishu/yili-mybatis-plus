@@ -304,9 +304,8 @@ public class ComBeanUtil {
      */
     public java.util.List<ComBean> makeColumnNamesMethodDecl(String supClass, List<JCTree.JCVariableDecl> jcVariableDeclList) {
         messager.printMessage(Diagnostic.Kind.WARNING, "执行makeColumnNamesMethodDecl");
-        java.util.List<ComBean> comBeans = null;
+        java.util.List<ComBean> comBeans = new ArrayList<>();
         if (jcVariableDeclList != null && jcVariableDeclList.size() > 0) {
-            comBeans = new ArrayList<>();
             for (JCTree.JCVariableDecl jcVariableDecl : jcVariableDeclList) {
                 ComBean comBean = new ComBean();
                 comBeans.add(comBean);

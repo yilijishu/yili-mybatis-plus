@@ -239,7 +239,7 @@ public class StandardWeb {
                         throw new BizException("无效的数据格式");
                     }
                     Page page = new Page(start, size);
-                    PageData<List<Object>> list = baseService.selectByPage(obj, page);
+                    PageData<Object> list = baseService.selectByPage(obj, page);
                     return ApiResult.resultSuccess(list);
                 }
                 default: {

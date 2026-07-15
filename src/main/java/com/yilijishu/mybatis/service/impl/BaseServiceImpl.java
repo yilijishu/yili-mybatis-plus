@@ -166,7 +166,7 @@ public class BaseServiceImpl implements BaseService {
      * @return 返回集合数据
      */
     @Override
-    public PageData<List<Object>> selectByPage(Object p, Page page) {
+    public PageData<Object> selectByPage(Object p, Page page) {
         BaseManager baseManager = applicationContext.getBean(p.getClass().getSimpleName() + "Manager", BaseManager.class);
         return baseManager.selectPage(p, page);
     }

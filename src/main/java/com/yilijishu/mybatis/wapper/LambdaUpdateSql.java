@@ -1,6 +1,7 @@
 package com.yilijishu.mybatis.wapper;
 
 import com.yilijishu.mybatis.wapper.fun.SFunction;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +29,13 @@ public class LambdaUpdateSql<Entity> extends LambdaYiliSql<Entity, LambdaUpdateS
 
     public LambdaUpdateSql<Entity> set(String column, Object obj) {
         set.put(column, obj);
+        return this;
+    }
+
+    public LambdaUpdateSql<Entity> setSql(String sql) {
+        if (StringUtils.isNotBlank(sql)) {
+            set.put("CUSTOM_SQL", sql);
+        }
         return this;
     }
 

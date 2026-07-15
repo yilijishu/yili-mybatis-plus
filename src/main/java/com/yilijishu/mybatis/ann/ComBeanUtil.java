@@ -356,8 +356,9 @@ public class ComBeanUtil {
                                     comBean.setColumValue(tmp);
                                 } else if ("typeHandler()".equals(a.fst.toString())) {
                                     // JDK9+ : Attribute.Class.getValue() 返回 Type 而非 Class
-                                    comBean.setHandler(true);
                                     comBean.setHandlerStr(classNameFromAttributeValue(a.snd.getValue()));
+                                } else if ("useTypeHandler()".equals(a.fst.toString())) {
+                                    comBean.setHandler((Boolean) a.snd.getValue());
                                 }
 
                             }
@@ -512,11 +513,8 @@ public class ComBeanUtil {
                 if (column != null) {
                     comBean.setColumn(true);
                     comBean.setColumValue(column.value());
-                    Class<?> cls = column.typeHandler();
-                    if (cls != null) {
-                        comBean.setHandler(true);
-                        comBean.setHandlerStr(cls.getName());
-                    }
+                    comBean.setHandler(column.useTypeHandler());
+                    comBean.setHandlerStr(column.typeHandler().getName());
                 }
                 if (orderBy != null) {
                     comBean.setOrderBy(true);

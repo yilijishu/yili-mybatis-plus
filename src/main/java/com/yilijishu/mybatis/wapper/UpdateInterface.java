@@ -26,9 +26,13 @@ public interface UpdateInterface<Entity> {
             if (i > 0) {
                 result.append(" ,");
             }
-            result.append(Constant.escape(k));
-            result.append(" = ");
-            result.append(Constant.convertObject(v));
+            if("CUSTOM_SQL".equals(k)) {
+                result.append(v);
+            } else {
+                result.append(Constant.escape(k));
+                result.append(" = ");
+                result.append(Constant.convertObject(v));
+            }
         });
         String w = getSql();
         if (StringUtils.isNotBlank(w)) {

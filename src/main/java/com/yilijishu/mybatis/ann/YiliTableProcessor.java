@@ -3,7 +3,10 @@ package com.yilijishu.mybatis.ann;
 
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.api.JavacTrees;
-import com.sun.tools.javac.code.*;
+import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symtab;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.tree.TreeTranslator;
@@ -13,7 +16,6 @@ import com.sun.tools.javac.util.Names;
 import com.yilijishu.mybatis.constant.Constant;
 import com.yilijishu.mybatis.entity.ComBean;
 import com.yilijishu.mybatis.entity.ComMethod;
-import com.yilijishu.mybatis.util.CamelUnderUtil;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
@@ -143,7 +145,11 @@ public class YiliTableProcessor extends AbstractProcessor {
                             for (JCTree tree : jcClassDecl.defs) {
                                 if (tree.getKind().equals(Tree.Kind.VARIABLE)) {
                                     JCTree.JCVariableDecl jcVariableDecl = (JCTree.JCVariableDecl) tree;
-                                    jcVariableDeclList = jcVariableDeclList.append(jcVariableDecl);
+                                    long flags = jcVariableDecl.mods.flags;
+                                    boolean isStatic = (flags & Flags.STATIC) != 0;
+                                    if (!isStatic) {
+                                        jcVariableDeclList = jcVariableDeclList.append(jcVariableDecl);
+                                    }
                                 } else if (tree.getKind().equals(Tree.Kind.METHOD)) {
                                     JCTree.JCMethodDecl jcMethodDecl = (JCTree.JCMethodDecl) tree;
                                     jcMethodDeclList = jcMethodDeclList.append(jcMethodDecl);
@@ -194,8 +200,6 @@ public class YiliTableProcessor extends AbstractProcessor {
 
         return qualIdent;
     }
-
-
 
 
     /**
@@ -381,7 +385,6 @@ public class YiliTableProcessor extends AbstractProcessor {
                         treeMaker.Ident(names.fromString(returnType)),
                         List.nil(), List.nil(), List.nil(), body, null);
     }
-
 
 
 }

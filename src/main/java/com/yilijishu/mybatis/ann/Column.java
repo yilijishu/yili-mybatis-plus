@@ -15,6 +15,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface Column {
     String value();
-
-    Class<? extends TypeHandler> typeHandler();
+    boolean useTypeHandler() default false;
+    Class<? extends TypeHandler> typeHandler() default TypeHandler.class;
 }

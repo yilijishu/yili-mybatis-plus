@@ -24,6 +24,13 @@ public class UpdateSql<Entity> extends YiliSql<Entity, String, UpdateSql<Entity>
         }
         return this;
     }
+    public UpdateSql<Entity> setSql(String sql) {
+        if (StringUtils.isNotBlank(sql)) {
+            set.put("CUSTOM_SQL", sql);
+        }
+        return this;
+    }
+
 
     @Override
     public String getSql() {

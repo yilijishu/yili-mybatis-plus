@@ -2,6 +2,8 @@ package com.yilijishu.mybatis.wapper;
 
 import com.yilijishu.mybatis.ann.SetDataBase;
 import com.yilijishu.mybatis.constant.Constant;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +13,14 @@ public class YiliSql<Entity, B, Children extends YiliSql<Entity, B, Children>> e
 
     protected final Children child = (Children) this;
     protected Entity entity;
-    protected List<QueryConditions> where;
+    @Getter
+    @Setter
+    private List<QueryConditions> where;
 
+    @Getter
+    @Setter
     protected List<QueryConditions> orderBy;
+
 
 
     @Override
@@ -29,10 +36,6 @@ public class YiliSql<Entity, B, Children extends YiliSql<Entity, B, Children>> e
         }
     }
 
-
-    public List<QueryConditions> getWhere() {
-        return this.where;
-    }
 
     protected <T> void addQuery(SqlKey sqlKey, B column, T... data) {
         where.add(new QueryConditions(sqlKey, columnToString(column), data));
@@ -213,7 +216,7 @@ public class YiliSql<Entity, B, Children extends YiliSql<Entity, B, Children>> e
      * @return 返回子类
      */
 
-    public Children lteq(B column, Object data) {
+    public Children ltEq(B column, Object data) {
         if (column != null) {
             addQuery(SqlKey.LE, column, data);
         }
@@ -229,9 +232,9 @@ public class YiliSql<Entity, B, Children extends YiliSql<Entity, B, Children>> e
      * @return 返回子类
      */
 
-    public Children lteq(boolean condition, B column, Object data) {
+    public Children ltEq(boolean condition, B column, Object data) {
         if (condition) {
-            return lteq(column, data);
+            return ltEq(column, data);
         }
         return this.child;
     }
@@ -679,7 +682,7 @@ public class YiliSql<Entity, B, Children extends YiliSql<Entity, B, Children>> e
             } else {
                 lastOr = i;
             }
-            stringBuffer.append(qc.toSqlString());
+            stringBuffer.append(qc.toSqlString("p.where[".concat(String.valueOf(i)).concat("]")));
         }
         return stringBuffer.toString();
     }

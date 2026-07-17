@@ -7,15 +7,15 @@ public class GroupByConditions<T> extends QueryConditions<T> {
     private String[] columns;
 
     public GroupByConditions(SqlKey sqlKey, String... columns) {
-        this.sqlKey = sqlKey;
+        this.setSqlKey(sqlKey);
         this.columns = columns;
     }
 
 
-    public String toSqlString() {
+    public String toSqlString(String param) {
         StringBuffer stringBuffer = new StringBuffer();
         stringBuffer.append(Constant.SPACE);
-        stringBuffer.append(sqlKey.getSqlSegment());
+        stringBuffer.append(getSqlKey().getSqlSegment());
         stringBuffer.append(Constant.SPACE);
         for (int i = 0; i < columns.length; i++) {
             if (i > 0) {

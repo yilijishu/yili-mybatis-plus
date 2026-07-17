@@ -2,6 +2,8 @@ package com.yilijishu.mybatis.wapper;
 
 
 import com.yilijishu.mybatis.iter.BaseBeanInterface;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
@@ -10,6 +12,8 @@ import java.util.Map;
 public class UpdateSql<Entity> extends YiliSql<Entity, String, UpdateSql<Entity>>
         implements UpdateInterface<Entity> {
 
+    @Getter
+    @Setter
     private Map<String, Object> set;
 
     public UpdateSql(Entity t) {

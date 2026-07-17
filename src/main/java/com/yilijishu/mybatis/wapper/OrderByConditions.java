@@ -15,19 +15,24 @@ public class OrderByConditions<T> extends QueryConditions<T> {
     }
 
     public OrderByConditions(SqlKey sqlKey, List<QueryConditions> orderByConditionsList) {
-        this.sqlKey = sqlKey;
+        setSqlKey(sqlKey);
         this.orderByConditionsList = orderByConditionsList;
     }
 
 
     @Override
-    public String toSqlString() {
+    public String toSqlString(String param) {
         StringBuffer stringBuffer = new StringBuffer();
-        stringBuffer.append(sqlKey.getSqlSegment());
         stringBuffer.append(Constant.SPACE);
-        orderByConditionsList.forEach(e->{
-            stringBuffer.append(e.toSqlString());
-        });
+        stringBuffer.append(getSqlKey().getSqlSegment());
+        stringBuffer.append(Constant.SPACE);
+        for(int i=0;i<orderByConditionsList.size();i++) {
+            QueryConditions e = orderByConditionsList.get(i);
+            if(i>0) {
+                stringBuffer.append(", ");
+            }
+            stringBuffer.append(e.toSqlString(param));
+        }
         return stringBuffer.toString();
     }
 }

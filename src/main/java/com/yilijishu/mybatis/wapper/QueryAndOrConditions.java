@@ -1,11 +1,15 @@
 package com.yilijishu.mybatis.wapper;
 
 import com.yilijishu.mybatis.constant.Constant;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
 public class QueryAndOrConditions<T> extends QueryConditions<T> {
 
+    @Getter
+    @Setter
     private List<QueryConditions> queryConditions;
 
 
@@ -25,12 +29,12 @@ public class QueryAndOrConditions<T> extends QueryConditions<T> {
 
     public QueryAndOrConditions(SqlKey sqlKey) {
         super();
-        this.sqlKey = sqlKey;
+        setSqlKey(sqlKey);
     }
 
     public QueryAndOrConditions(SqlKey sqlKey, List<QueryConditions> queryConditions) {
         super();
-        this.sqlKey = sqlKey;
+        setSqlKey(sqlKey);
         this.queryConditions = queryConditions;
     }
 
@@ -43,13 +47,13 @@ public class QueryAndOrConditions<T> extends QueryConditions<T> {
         return this;
     }
 
-    public String toSqlString() {
+    public String toSqlString(String param) {
         StringBuffer sbf = new StringBuffer();
-        switch (sqlKey) {
+        switch (getSqlKey()) {
             case AND:
             case HAVING:
             case OR: {
-                forQuery(this, sbf);
+                forQuery(this, sbf, param);
                 break;
             }
             default:
@@ -60,7 +64,7 @@ public class QueryAndOrConditions<T> extends QueryConditions<T> {
     }
 
 
-    private void forQuery(QueryConditions queryConditions, StringBuffer sbf) {
+    private void forQuery(QueryConditions queryConditions, StringBuffer sbf, String param) {
         if (queryConditions != null) {
             if (queryConditions instanceof QueryAndOrConditions) {
                 QueryAndOrConditions queryAndOrConditions = (QueryAndOrConditions) queryConditions;
@@ -80,12 +84,12 @@ public class QueryAndOrConditions<T> extends QueryConditions<T> {
                         } else {
                             lastOr = i;
                         }
-                        forQuery(e, sbf);
+                        forQuery(e, sbf, param.concat(".queryConditions[").concat(String.valueOf(i)).concat("]"));
                     }
                     sbf.append(")");
                 }
             } else {
-                sbf.append(queryConditions.toSqlString());
+                sbf.append(queryConditions.toSqlString(param));
             }
         }
     }

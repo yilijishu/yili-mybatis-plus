@@ -1,6 +1,8 @@
 package com.yilijishu.mybatis.wapper;
 
 import com.yilijishu.mybatis.wapper.fun.SFunction;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashMap;
@@ -10,6 +12,8 @@ import java.util.function.Supplier;
 public class LambdaUpdateSql<Entity> extends LambdaYiliSql<Entity, LambdaUpdateSql<Entity>>
         implements UpdateInterface<Entity> {
 
+    @Getter
+    @Setter
     private Map<String, Object> set;
 
     public LambdaUpdateSql(Supplier<Entity> suppliery) {

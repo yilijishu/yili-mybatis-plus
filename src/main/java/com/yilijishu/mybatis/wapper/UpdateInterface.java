@@ -31,7 +31,7 @@ public interface UpdateInterface<Entity> {
             } else {
                 result.append(Constant.escape(k));
                 result.append(" = ");
-                result.append(Constant.convertObject(v));
+                result.append("#{p.set[".concat(k).concat("]}"));
             }
         });
         String w = getSql();

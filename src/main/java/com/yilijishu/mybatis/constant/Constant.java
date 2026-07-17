@@ -114,12 +114,54 @@ public final class Constant {
     }
 
 
+    public static String like(String direction, String content) {
+        if (dataBase != null) {
+            switch (dataBase) {
+                case POSTGRESQL:
+                case ORACLE: {
+                    switch (direction) {
+                        case "LEFT": {
+                            return "'%' || ".concat(content);
+                        }
+                        case "RIGHT": {
+                            return content.concat(" || '%'");
+                        }
+                        default: {
+                            return "'%' || ".concat(content).concat(" || '%'");
+                        }
+                    }
+                }
+                case MYSQL:
+                case SQLSERVER:
+                case SQLITE:
+                default: {
+                    break;
+                }
+            }
+        }
+        switch (direction) {
+            case "LEFT": {
+                return "CONCAT(".concat("'%', ").concat(content).concat(")");
+            }
+            case "RIGHT": {
+                return "CONCAT(".concat(content).concat(", '%')");
+            }
+            default: {
+                return "CONCAT(".concat("'%', ").concat(content).concat(", '%')");
+            }
+        }
+    }
+
+
     /**
      * 对Object数据转换成数据库识别的值
      * @param data  object数据
      * @return 识别的值
      */
     public static String convertObject(Object data) {
+        if(data == null) {
+            return "NULL";
+        }
         if (data instanceof Integer || data instanceof Long || data instanceof Double || data instanceof Byte || data instanceof Short || data instanceof Float) {
             return data.toString();
         } else if (data instanceof Boolean) {

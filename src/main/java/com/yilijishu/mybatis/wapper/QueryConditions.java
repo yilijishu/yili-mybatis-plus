@@ -15,7 +15,12 @@ public class QueryConditions<T> {
 
     @Getter
     @Setter
-    private T[] data;
+    private T value1;
+
+    @Getter
+    @Setter
+    private T value2;
+
     @Getter
     @Setter
     private String column;
@@ -26,7 +31,12 @@ public class QueryConditions<T> {
     public QueryConditions(SqlKey sqlKey, String column, T... data) {
         this.sqlKey = sqlKey;
         this.column = column;
-        this.data = data;
+        if(data != null && data.length > 0) {
+            this.value1 = data[0];
+            if(data.length > 1) {
+                this.value2 = data[1];
+            }
+        }
     }
 
     public QueryConditions(SqlKey sqlKey, String column) {
@@ -41,7 +51,12 @@ public class QueryConditions<T> {
     }
 
     public QueryConditions<T> add(T... data) {
-        this.data = data;
+        if(data != null && data.length > 0) {
+            this.value1 = data[0];
+            if(data.length > 1) {
+                this.value2 = data[1];
+            }
+        }
         return this;
     }
 
@@ -66,7 +81,7 @@ public class QueryConditions<T> {
         sbf.append(Constant.SPACE);
         sbf.append(sqlKey.getSqlSegment());
         sbf.append(Constant.SPACE);
-        String value = "#{".concat(param).concat(".data[0]").concat("}");
+        String value = "#{".concat(param).concat(".value1").concat("}");
         switch (sqlKey) {
             case LIKE: {
                 sbf.append(Constant.like("ALL", value));
@@ -84,7 +99,7 @@ public class QueryConditions<T> {
             case NOT_BETWEEN: {
                 sbf.append(value);
                 sbf.append(" AND ");
-                sbf.append("#{".concat(param).concat(".data[1]").concat("}"));
+                sbf.append("#{".concat(param).concat(".value2").concat("}"));
                 break;
             }
             case IS_NOT_NULL:
@@ -96,16 +111,15 @@ public class QueryConditions<T> {
             case IN:
             case NOT_IN: {
                 sbf.append("(");
-                sbf.append(value);
-//                if (data[0] instanceof List) {
-//                    List tmp = (List) data[0];
-//                    for (int i = 0; i < tmp.size(); i++) {
-//                        sbf.append("#{".concat(param).concat(".data[0][").concat(String.valueOf(i)).concat("]").concat("}"));
-//                        if (i + 1 < tmp.size()) {
-//                            sbf.append(",");
-//                        }
-//                    }
-//                }
+                if (value1 instanceof List) {
+                    List tmp = (List) value1;
+                    for (int i = 0; i < tmp.size(); i++) {
+                        sbf.append("#{".concat(param).concat(".value1[").concat(String.valueOf(i)).concat("]").concat("}"));
+                        if (i + 1 < tmp.size()) {
+                            sbf.append(",");
+                        }
+                    }
+                }
                 sbf.append(")");
                 break;
             }
